@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BVRITN Document Verification App
 
 A React Native (Expo) mobile application for streamlined student document
@@ -193,3 +194,6 @@ npm run build:ios
 ## License
 
 © 2024 BVRITN College of Engineering. All rights reserved.
+=======
+# Freshman-Registration.1
+>>>>>>> 1cc134f08e787383c9cba46cd288a49f0f807f84
