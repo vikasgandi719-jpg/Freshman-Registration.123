@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Expo Managed Workflow
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Environment Variables (IMPORTANT - never commit secrets)
+.env
+.env.local
+.env.development
+.env.production
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Cache
+.cache/
+
+# Testing
+coverage/

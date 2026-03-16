@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "BVRITN DocVerify",
+    "slug": "bvritn-document-verification",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/logo.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./src/assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#EFF6FF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bvritn.docverify",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "DocVerify needs camera access to upload document photos.",
+        "NSPhotoLibraryUsageDescription": "DocVerify needs photo library access to select documents.",
+        "NSPhotoLibraryAddUsageDescription": "DocVerify needs permission to save photos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/adaptive-icon.png",
+        "backgroundColor": "#EFF6FF"
+      },
+      "package": "com.bvritn.docverify",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ]
+    },
+    "web": {
+      "favicon": "./src/assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow DocVerify to access your photos to upload documents.",
+          "cameraPermission": "Allow DocVerify to use your camera to capture document photos.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id-here"
+      }
+    }
+  }
+}
