@@ -34,7 +34,7 @@ export const throttle = (fn, limit = 500) => {
 // ─── Group array by key ────────────────────────────────────────────────────────
 export const groupBy = (array, key) => {
   return array.reduce((result, item) => {
-    const group = item[key] ?? 'Other';
+    const group = item[key] ?? "Other";
     if (!result[group]) result[group] = [];
     result[group].push(item);
     return result;
@@ -42,12 +42,14 @@ export const groupBy = (array, key) => {
 };
 
 // ─── Sort array ────────────────────────────────────────────────────────────────
-export const sortBy = (array, key, direction = 'asc') => {
+export const sortBy = (array, key, direction = "asc") => {
   return [...array].sort((a, b) => {
-    const aVal = a[key] ?? '';
-    const bVal = b[key] ?? '';
-    const cmp  = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
-    return direction === 'asc' ? cmp : -cmp;
+    const aVal = a[key] ?? "";
+    const bVal = b[key] ?? "";
+    const cmp = String(aVal).localeCompare(String(bVal), undefined, {
+      numeric: true,
+    });
+    return direction === "asc" ? cmp : -cmp;
   });
 };
 
@@ -59,7 +61,7 @@ export const filterBySearch = (array, query, keys = []) => {
     keys.some((key) => {
       const value = item[key];
       return value && String(value).toLowerCase().includes(lower);
-    })
+    }),
   );
 };
 
@@ -85,10 +87,10 @@ export const chunk = (array, size) => {
 
 // ─── Check if empty ───────────────────────────────────────────────────────────
 export const isEmpty = (value) => {
-  if (value === null || value === undefined)  return true;
-  if (typeof value === 'string')              return value.trim().length === 0;
-  if (Array.isArray(value))                   return value.length === 0;
-  if (typeof value === 'object')              return Object.keys(value).length === 0;
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
 };
 
@@ -102,7 +104,7 @@ export const pick = (obj, keys) => {
 
 export const omit = (obj, keys) => {
   return Object.fromEntries(
-    Object.entries(obj).filter(([key]) => !keys.includes(key))
+    Object.entries(obj).filter(([key]) => !keys.includes(key)),
   );
 };
 
@@ -126,35 +128,45 @@ export const mergeDeep = (target, source) => {
 };
 
 const isObject = (item) =>
-  item && typeof item === 'object' && !Array.isArray(item);
+  item && typeof item === "object" && !Array.isArray(item);
 
-// ─── Generate unique ID ────────────────────────────────────────────────────────
+// ─── Generate unique student ID ─────────────────────────────────────────────────
+export const generateStudentId = (
+  counter = 1,
+  year = new Date().getFullYear(),
+) => {
+  const paddedCounter = String(counter).padStart(4, "0");
+  return `${year}-bvritn-1a-${paddedCounter}`;
+};
+
+// ─── Generate unique ID (legacy) ────────────────────────────────────────────────
 export const generateId = () => {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 };
 
 // ─── Capitalize ───────────────────────────────────────────────────────────────
-export const capitalize = (str = '') => {
-  if (!str) return '';
+export const capitalize = (str = "") => {
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
 // ─── Parse API error ──────────────────────────────────────────────────────────
 export const parseApiError = (error) => {
-  if (!error)                  return 'Something went wrong. Please try again.';
-  if (typeof error === 'string') return error;
-  if (error.message)           return error.message;
-  if (error.data?.message)     return error.data.message;
-  if (error.data?.error)       return error.data.error;
-  if (error.status === 400)    return 'Invalid request. Please check your inputs.';
-  if (error.status === 401)    return 'Session expired. Please login again.';
-  if (error.status === 403)    return 'You do not have permission to perform this action.';
-  if (error.status === 404)    return 'The requested resource was not found.';
-  if (error.status === 409)    return 'A conflict occurred. Please try again.';
-  if (error.status === 422)    return 'Invalid data. Please check your inputs.';
-  if (error.status === 429)    return 'Too many requests. Please slow down.';
-  if (error.status >= 500)     return 'Server error. Please try again later.';
-  return 'Something went wrong. Please try again.';
+  if (!error) return "Something went wrong. Please try again.";
+  if (typeof error === "string") return error;
+  if (error.message) return error.message;
+  if (error.data?.message) return error.data.message;
+  if (error.data?.error) return error.data.error;
+  if (error.status === 400) return "Invalid request. Please check your inputs.";
+  if (error.status === 401) return "Session expired. Please login again.";
+  if (error.status === 403)
+    return "You do not have permission to perform this action.";
+  if (error.status === 404) return "The requested resource was not found.";
+  if (error.status === 409) return "A conflict occurred. Please try again.";
+  if (error.status === 422) return "Invalid data. Please check your inputs.";
+  if (error.status === 429) return "Too many requests. Please slow down.";
+  if (error.status >= 500) return "Server error. Please try again later.";
+  return "Something went wrong. Please try again.";
 };
 
 // ─── Build FormData from object ───────────────────────────────────────────────
@@ -162,14 +174,14 @@ export const buildFormData = (data) => {
   const formData = new FormData();
   Object.entries(data).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {
-      if (typeof value === 'object' && value.uri) {
+      if (typeof value === "object" && value.uri) {
         // React Native file object
         formData.append(key, {
-          uri:  value.uri,
-          name: value.name || `${key}.${value.type?.split('/')[1] || 'jpg'}`,
-          type: value.type || 'application/octet-stream',
+          uri: value.uri,
+          name: value.name || `${key}.${value.type?.split("/")[1] || "jpg"}`,
+          type: value.type || "application/octet-stream",
         });
-      } else if (typeof value === 'object') {
+      } else if (typeof value === "object") {
         formData.append(key, JSON.stringify(value));
       } else {
         formData.append(key, String(value));
@@ -182,7 +194,7 @@ export const buildFormData = (data) => {
 // ─── Document helpers ─────────────────────────────────────────────────────────
 export const calcCompletionPercent = (documents = []) => {
   if (!documents.length) return 0;
-  const approved = documents.filter((d) => d.status === 'approved').length;
+  const approved = documents.filter((d) => d.status === "approved").length;
   return Math.round((approved / documents.length) * 100);
 };
 
@@ -190,12 +202,12 @@ export const getDocumentStats = (documents = []) => {
   return documents.reduce(
     (acc, doc) => {
       acc.total++;
-      const status = doc.status || 'not_uploaded';
+      const status = doc.status || "not_uploaded";
       if (acc[status] !== undefined) acc[status]++;
       else acc.not_uploaded++;
       return acc;
     },
-    { total: 0, approved: 0, pending: 0, rejected: 0, not_uploaded: 0 }
+    { total: 0, approved: 0, pending: 0, rejected: 0, not_uploaded: 0 },
   );
 };
 
@@ -211,11 +223,11 @@ export const hexToRgba = (hex, alpha = 1) => {
 
 // ─── Platform helpers ─────────────────────────────────────────────────────────
 export const isAndroid = () => {
-  const { Platform } = require('react-native');
-  return Platform.OS === 'android';
+  const { Platform } = require("react-native");
+  return Platform.OS === "android";
 };
 
 export const isIOS = () => {
-  const { Platform } = require('react-native');
-  return Platform.OS === 'ios';
+  const { Platform } = require("react-native");
+  return Platform.OS === "ios";
 };

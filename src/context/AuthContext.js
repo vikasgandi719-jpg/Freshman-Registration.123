@@ -1,29 +1,29 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../constants/config';
+import React, { createContext, useContext, useReducer, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "../constants/config";
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
 const initialState = {
-  user:          null,
-  token:         null,
-  isLoggedIn:    false,
-  isLoading:     true,
-  error:         null,
-  otpSent:       false,
-  otpVerified:   false,
+  user: null,
+  token: null,
+  isLoggedIn: false,
+  isLoading: true,
+  error: null,
+  otpSent: false,
+  otpVerified: false,
 };
 
 // ─── Action Types ──────────────────────────────────────────────────────────────
 const AUTH_ACTIONS = {
-  SET_LOADING:       'SET_LOADING',
-  LOGIN_SUCCESS:     'LOGIN_SUCCESS',
-  LOGOUT:            'LOGOUT',
-  SET_ERROR:         'SET_ERROR',
-  CLEAR_ERROR:       'CLEAR_ERROR',
-  OTP_SENT:          'OTP_SENT',
-  OTP_VERIFIED:      'OTP_VERIFIED',
-  UPDATE_USER:       'UPDATE_USER',
-  RESTORE_SESSION:   'RESTORE_SESSION',
+  SET_LOADING: "SET_LOADING",
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGOUT: "LOGOUT",
+  SET_ERROR: "SET_ERROR",
+  CLEAR_ERROR: "CLEAR_ERROR",
+  OTP_SENT: "OTP_SENT",
+  OTP_VERIFIED: "OTP_VERIFIED",
+  UPDATE_USER: "UPDATE_USER",
+  RESTORE_SESSION: "RESTORE_SESSION",
 };
 
 // ─── Reducer ───────────────────────────────────────────────────────────────────
@@ -35,11 +35,11 @@ const authReducer = (state, action) => {
     case AUTH_ACTIONS.LOGIN_SUCCESS:
       return {
         ...state,
-        user:       action.payload.user,
-        token:      action.payload.token,
+        user: action.payload.user,
+        token: action.payload.token,
         isLoggedIn: true,
-        isLoading:  false,
-        error:      null,
+        isLoading: false,
+        error: null,
       };
 
     case AUTH_ACTIONS.LOGOUT:
@@ -66,10 +66,10 @@ const authReducer = (state, action) => {
     case AUTH_ACTIONS.RESTORE_SESSION:
       return {
         ...state,
-        user:       action.payload.user,
-        token:      action.payload.token,
+        user: action.payload.user,
+        token: action.payload.token,
         isLoggedIn: true,
-        isLoading:  false,
+        isLoading: false,
       };
 
     default:
@@ -84,27 +84,9 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Restore session on app start
+  // Don't restore session on app start - always start from beginning
   useEffect(() => {
-    const restoreSession = async () => {
-      try {
-        const token    = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-
-        if (token && userData) {
-          dispatch({
-            type: AUTH_ACTIONS.RESTORE_SESSION,
-            payload: { token, user: JSON.parse(userData) },
-          });
-        } else {
-          dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
-        }
-      } catch (error) {
-        dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
-      }
-    };
-
-    restoreSession();
+    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
   }, []);
 
   // ─── Actions ────────────────────────────────────────────────────────────────
@@ -114,7 +96,10 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
       dispatch({ type: AUTH_ACTIONS.LOGIN_SUCCESS, payload: { user, token } });
     } catch (error) {
-      dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: 'Failed to save session.' });
+      dispatch({
+        type: AUTH_ACTIONS.SET_ERROR,
+        payload: "Failed to save session.",
+      });
     }
   };
 
@@ -123,16 +108,22 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.AUTH_TOKEN,
         STORAGE_KEYS.USER_DATA,
+        STORAGE_KEYS.APP_STARTED,
       ]);
+      // Also clear student profile data
+      const { studentService } = await import("../services/studentService");
+      await studentService.resetProfile();
     } catch (_) {}
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
   };
 
-  const setError   = (msg) => dispatch({ type: AUTH_ACTIONS.SET_ERROR,   payload: msg  });
-  const clearError = ()    => dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR                 });
-  const setLoading = (val) => dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: val  });
-  const otpSent    = ()    => dispatch({ type: AUTH_ACTIONS.OTP_SENT                    });
-  const otpVerified= ()    => dispatch({ type: AUTH_ACTIONS.OTP_VERIFIED                });
+  const setError = (msg) =>
+    dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: msg });
+  const clearError = () => dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
+  const setLoading = (val) =>
+    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: val });
+  const otpSent = () => dispatch({ type: AUTH_ACTIONS.OTP_SENT });
+  const otpVerified = () => dispatch({ type: AUTH_ACTIONS.OTP_VERIFIED });
 
   const updateUser = async (updates) => {
     const updated = { ...state.user, ...updates };
@@ -162,7 +153,7 @@ export const AuthProvider = ({ children }) => {
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
 
