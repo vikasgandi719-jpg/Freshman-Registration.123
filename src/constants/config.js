@@ -1,7 +1,7 @@
 // ─── App Info ─────────────────────────────────────────────────────────────────
 export const APP = {
-  NAME: "BVRITN Document Verification",
-  SHORT_NAME: "DocVerify",
+  NAME: "Freshman Registration",
+  SHORT_NAME: "Freshman Reg",
   VERSION: "1.0.0",
   BUILD: "1",
   SUPPORT_EMAIL: "support@bvritn.ac.in",
