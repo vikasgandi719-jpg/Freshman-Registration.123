@@ -63,17 +63,17 @@ const StartingScreen = ({ navigation }) => {
 
         {/* Title */}
         <Text style={styles.appName}>Freshman Registration</Text>
-        <Text style={styles.collegeName}>BVRITN College of Engineering</Text>
+        <Text style={styles.collegeName}>B V Raju Institue of Technology,Naraspur</Text>
         <Text style={styles.tagline}>
-          Streamlined document verification{"\n"}for students and administrators
+          {/* Streamlined document verification{"\n"}for students and administrators */}
         </Text>
 
         {/* Feature bullets */}
         <View style={styles.features}>
           {[
-            { icon: "📤", text: "Upload documents securely" },
-            { icon: "⚡", text: "Real-time verification status" },
-            { icon: "🔒", text: "Safe & encrypted storage" },
+            // { icon: "📤", text: "Upload documents securely" },
+            // { icon: "⚡", text: "Real-time verification status" },
+            // { icon: "🔒", text: "Safe & encrypted storage" },
           ].map((item) => (
             <View key={item.text} style={styles.featureRow}>
               <Text style={styles.featureIcon}>{item.icon}</Text>
