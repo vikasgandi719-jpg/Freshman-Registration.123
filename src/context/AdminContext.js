@@ -1,48 +1,48 @@
-import React, { createContext, useContext, useReducer } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../constants/config';
+import React, { createContext, useContext, useReducer, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "../constants/config";
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
 const initialState = {
-  admin:            null,
-  token:            null,
-  isLoggedIn:       false,
-  isLoading:        false,
-  error:            null,
+  admin: null,
+  token: null,
+  isLoggedIn: false,
+  isLoading: true, // Changed to true initially
+  error: null,
 
   // Dashboard data
-  students:         [],
+  students: [],
   filteredStudents: [],
-  selectedStudent:  null,
-  stats:            null,
+  selectedStudent: null,
+  stats: null,
 
   // Filters
-  searchQuery:      '',
-  statusFilter:     null,
-  branchFilter:     null,
+  searchQuery: "",
+  statusFilter: null,
+  branchFilter: null,
 
   // Pagination
-  currentPage:      1,
-  totalPages:       1,
-  totalStudents:    0,
+  currentPage: 1,
+  totalPages: 1,
+  totalStudents: 0,
 };
 
 // ─── Action Types ──────────────────────────────────────────────────────────────
 const ADMIN_ACTIONS = {
-  SET_LOADING:        'SET_LOADING',
-  LOGIN_SUCCESS:      'LOGIN_SUCCESS',
-  LOGOUT:             'LOGOUT',
-  SET_ERROR:          'SET_ERROR',
-  CLEAR_ERROR:        'CLEAR_ERROR',
-  SET_STUDENTS:       'SET_STUDENTS',
-  SET_SELECTED:       'SET_SELECTED',
-  UPDATE_STUDENT:     'UPDATE_STUDENT',
-  SET_STATS:          'SET_STATS',
-  SET_SEARCH:         'SET_SEARCH',
-  SET_STATUS_FILTER:  'SET_STATUS_FILTER',
-  SET_BRANCH_FILTER:  'SET_BRANCH_FILTER',
-  CLEAR_FILTERS:      'CLEAR_FILTERS',
-  SET_PAGE:           'SET_PAGE',
+  SET_LOADING: "SET_LOADING",
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGOUT: "LOGOUT",
+  SET_ERROR: "SET_ERROR",
+  CLEAR_ERROR: "CLEAR_ERROR",
+  SET_STUDENTS: "SET_STUDENTS",
+  SET_SELECTED: "SET_SELECTED",
+  UPDATE_STUDENT: "UPDATE_STUDENT",
+  SET_STATS: "SET_STATS",
+  SET_SEARCH: "SET_SEARCH",
+  SET_STATUS_FILTER: "SET_STATUS_FILTER",
+  SET_BRANCH_FILTER: "SET_BRANCH_FILTER",
+  CLEAR_FILTERS: "CLEAR_FILTERS",
+  SET_PAGE: "SET_PAGE",
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ const applyFilters = (students, searchQuery, statusFilter, branchFilter) => {
       (s) =>
         s.name?.toLowerCase().includes(q) ||
         s.email?.toLowerCase().includes(q) ||
-        s.rollNumber?.toLowerCase().includes(q)
+        s.rollNumber?.toLowerCase().includes(q),
     );
   }
 
@@ -79,11 +79,11 @@ const adminReducer = (state, action) => {
     case ADMIN_ACTIONS.LOGIN_SUCCESS:
       return {
         ...state,
-        admin:      action.payload.admin,
-        token:      action.payload.token,
+        admin: action.payload.admin,
+        token: action.payload.token,
         isLoggedIn: true,
-        isLoading:  false,
-        error:      null,
+        isLoading: false,
+        error: null,
       };
 
     case ADMIN_ACTIONS.LOGOUT:
@@ -100,15 +100,15 @@ const adminReducer = (state, action) => {
         action.payload.students,
         state.searchQuery,
         state.statusFilter,
-        state.branchFilter
+        state.branchFilter,
       );
       return {
         ...state,
-        students:         action.payload.students,
+        students: action.payload.students,
         filteredStudents: filtered,
-        totalStudents:    action.payload.total || action.payload.students.length,
-        totalPages:       action.payload.totalPages || 1,
-        isLoading:        false,
+        totalStudents: action.payload.total || action.payload.students.length,
+        totalPages: action.payload.totalPages || 1,
+        isLoading: false,
       };
     }
 
@@ -117,12 +117,17 @@ const adminReducer = (state, action) => {
 
     case ADMIN_ACTIONS.UPDATE_STUDENT: {
       const updated = state.students.map((s) =>
-        s.id === action.payload.id ? { ...s, ...action.payload } : s
+        s.id === action.payload.id ? { ...s, ...action.payload } : s,
       );
-      const filtered = applyFilters(updated, state.searchQuery, state.statusFilter, state.branchFilter);
+      const filtered = applyFilters(
+        updated,
+        state.searchQuery,
+        state.statusFilter,
+        state.branchFilter,
+      );
       return {
         ...state,
-        students:         updated,
+        students: updated,
         filteredStudents: filtered,
         selectedStudent:
           state.selectedStudent?.id === action.payload.id
@@ -135,26 +140,53 @@ const adminReducer = (state, action) => {
       return { ...state, stats: action.payload };
 
     case ADMIN_ACTIONS.SET_SEARCH: {
-      const filtered = applyFilters(state.students, action.payload, state.statusFilter, state.branchFilter);
-      return { ...state, searchQuery: action.payload, filteredStudents: filtered };
+      const filtered = applyFilters(
+        state.students,
+        action.payload,
+        state.statusFilter,
+        state.branchFilter,
+      );
+      return {
+        ...state,
+        searchQuery: action.payload,
+        filteredStudents: filtered,
+      };
     }
 
     case ADMIN_ACTIONS.SET_STATUS_FILTER: {
-      const filtered = applyFilters(state.students, state.searchQuery, action.payload, state.branchFilter);
-      return { ...state, statusFilter: action.payload, filteredStudents: filtered };
+      const filtered = applyFilters(
+        state.students,
+        state.searchQuery,
+        action.payload,
+        state.branchFilter,
+      );
+      return {
+        ...state,
+        statusFilter: action.payload,
+        filteredStudents: filtered,
+      };
     }
 
     case ADMIN_ACTIONS.SET_BRANCH_FILTER: {
-      const filtered = applyFilters(state.students, state.searchQuery, state.statusFilter, action.payload);
-      return { ...state, branchFilter: action.payload, filteredStudents: filtered };
+      const filtered = applyFilters(
+        state.students,
+        state.searchQuery,
+        state.statusFilter,
+        action.payload,
+      );
+      return {
+        ...state,
+        branchFilter: action.payload,
+        filteredStudents: filtered,
+      };
     }
 
     case ADMIN_ACTIONS.CLEAR_FILTERS: {
       return {
         ...state,
-        searchQuery:      '',
-        statusFilter:     null,
-        branchFilter:     null,
+        searchQuery: "",
+        statusFilter: null,
+        branchFilter: null,
         filteredStudents: state.students,
       };
     }
@@ -174,12 +206,41 @@ const AdminContext = createContext(null);
 export const AdminProvider = ({ children }) => {
   const [state, dispatch] = useReducer(adminReducer, initialState);
 
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const savedData = await AsyncStorage.getItem(STORAGE_KEYS.ADMIN_DATA);
+        if (savedData) {
+          const admin = JSON.parse(savedData);
+          dispatch({
+            type: ADMIN_ACTIONS.LOGIN_SUCCESS,
+            payload: { admin, token: admin.token || "restored" },
+          });
+        }
+      } catch (error) {
+        console.log("Failed to restore admin session:", error);
+      } finally {
+        dispatch({ type: ADMIN_ACTIONS.SET_LOADING, payload: false });
+      }
+    };
+    restoreSession();
+  }, []);
+
   const loginAdmin = async (admin, token) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ADMIN_DATA, JSON.stringify(admin));
-      dispatch({ type: ADMIN_ACTIONS.LOGIN_SUCCESS, payload: { admin, token } });
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.ADMIN_DATA,
+        JSON.stringify(admin),
+      );
+      dispatch({
+        type: ADMIN_ACTIONS.LOGIN_SUCCESS,
+        payload: { admin, token },
+      });
     } catch (error) {
-      dispatch({ type: ADMIN_ACTIONS.SET_ERROR, payload: 'Failed to save admin session.' });
+      dispatch({
+        type: ADMIN_ACTIONS.SET_ERROR,
+        payload: "Failed to save admin session.",
+      });
     }
   };
 
@@ -188,18 +249,28 @@ export const AdminProvider = ({ children }) => {
     dispatch({ type: ADMIN_ACTIONS.LOGOUT });
   };
 
-  const setStudents    = (data)    => dispatch({ type: ADMIN_ACTIONS.SET_STUDENTS,      payload: data    });
-  const setSelected    = (student) => dispatch({ type: ADMIN_ACTIONS.SET_SELECTED,      payload: student });
-  const updateStudent  = (data)    => dispatch({ type: ADMIN_ACTIONS.UPDATE_STUDENT,    payload: data    });
-  const setStats       = (data)    => dispatch({ type: ADMIN_ACTIONS.SET_STATS,         payload: data    });
-  const setSearch      = (query)   => dispatch({ type: ADMIN_ACTIONS.SET_SEARCH,        payload: query   });
-  const setStatusFilter= (status)  => dispatch({ type: ADMIN_ACTIONS.SET_STATUS_FILTER, payload: status  });
-  const setBranchFilter= (branch)  => dispatch({ type: ADMIN_ACTIONS.SET_BRANCH_FILTER, payload: branch  });
-  const clearFilters   = ()        => dispatch({ type: ADMIN_ACTIONS.CLEAR_FILTERS                        });
-  const setPage        = (page)    => dispatch({ type: ADMIN_ACTIONS.SET_PAGE,          payload: page    });
-  const setLoading     = (val)     => dispatch({ type: ADMIN_ACTIONS.SET_LOADING,       payload: val     });
-  const setError       = (msg)     => dispatch({ type: ADMIN_ACTIONS.SET_ERROR,         payload: msg     });
-  const clearError     = ()        => dispatch({ type: ADMIN_ACTIONS.CLEAR_ERROR                          });
+  const setStudents = (data) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_STUDENTS, payload: data });
+  const setSelected = (student) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_SELECTED, payload: student });
+  const updateStudent = (data) =>
+    dispatch({ type: ADMIN_ACTIONS.UPDATE_STUDENT, payload: data });
+  const setStats = (data) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_STATS, payload: data });
+  const setSearch = (query) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_SEARCH, payload: query });
+  const setStatusFilter = (status) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_STATUS_FILTER, payload: status });
+  const setBranchFilter = (branch) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_BRANCH_FILTER, payload: branch });
+  const clearFilters = () => dispatch({ type: ADMIN_ACTIONS.CLEAR_FILTERS });
+  const setPage = (page) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_PAGE, payload: page });
+  const setLoading = (val) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_LOADING, payload: val });
+  const setError = (msg) =>
+    dispatch({ type: ADMIN_ACTIONS.SET_ERROR, payload: msg });
+  const clearError = () => dispatch({ type: ADMIN_ACTIONS.CLEAR_ERROR });
 
   return (
     <AdminContext.Provider
@@ -229,7 +300,7 @@ export const AdminProvider = ({ children }) => {
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 export const useAdmin = () => {
   const context = useContext(AdminContext);
-  if (!context) throw new Error('useAdmin must be used within AdminProvider');
+  if (!context) throw new Error("useAdmin must be used within AdminProvider");
   return context;
 };
 

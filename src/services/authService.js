@@ -73,13 +73,9 @@ const authService = {
         dob: data.dob ? data.dob.toISOString().split("T")[0] : null,
       };
 
-<<<<<<< HEAD
       // const year = data.dob ? data.dob.getFullYear() : new Date().getFullYear();
       const year = new Date().getFullYear();
-      const uniqueId = `${year}-bvritn-1a-${String(studentCounter++).padStart(4, "0")}`;
-=======
-      const uniqueId = `2026-BVRITN-1a-${String(studentCounter).padStart(4, "0")}`;
->>>>>>> ddea661 (change the data of birth and unique id)
+      const uniqueId = `2026-BVRITN-1a-${String(studentCounter++).padStart(4, "0")}`;
 
       return {
         message: "Registration successful (Demo Mode)",

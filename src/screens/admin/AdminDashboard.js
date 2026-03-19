@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  TouchableOpacity, RefreshControl, SafeAreaView,
+  TouchableOpacity, RefreshControl, SafeAreaView, Platform,
 } from 'react-native';
 import { useAdmin }    from '../../context/AdminContext';
 import { useStudents } from '../../hooks/useStudents';
@@ -39,17 +39,30 @@ const AdminDashboard = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+
+          {/* ✅ Hamburger menu — only on mobile */}
+          {Platform.OS !== 'web' && (
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => navigation.openDrawer()}
+            >
+              <Text style={styles.menuIcon}>☰</Text>
+            </TouchableOpacity>
+          )}
+
+          <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>Welcome back 👋</Text>
             <Text style={styles.adminName}>{admin?.name || 'Admin'}</Text>
             <Text style={styles.role}>{admin?.role || 'Administrator'}</Text>
           </View>
+
           <TouchableOpacity
             style={styles.settingsBtn}
             onPress={() => navigation.navigate(SCREENS.ADMIN_SETTINGS)}
           >
             <Text style={styles.settingsIcon}>⚙️</Text>
           </TouchableOpacity>
+
         </View>
 
         {/* Stats Grid */}
@@ -95,10 +108,10 @@ const AdminDashboard = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsGrid}>
           {[
-            { icon: '🎓', label: 'All Students',   screen: SCREENS.STUDENT_LIST      },
-            { icon: '✅', label: 'Verify Docs',    screen: SCREENS.VERIFICATION      },
-            { icon: '🏫', label: 'Branches',       screen: SCREENS.BRANCH_MANAGEMENT },
-            { icon: '⚙️', label: 'Settings',       screen: SCREENS.ADMIN_SETTINGS    },
+            { icon: '🎓', label: 'All Students', screen: SCREENS.STUDENT_LIST      },
+            { icon: '✅', label: 'Verify Docs',  screen: SCREENS.VERIFICATION      },
+            { icon: '🏫', label: 'Branches',     screen: SCREENS.BRANCH_MANAGEMENT },
+            { icon: '⚙️', label: 'Settings',     screen: SCREENS.ADMIN_SETTINGS    },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}
@@ -169,22 +182,24 @@ const AdminDashboard = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safe:          { flex: 1, backgroundColor: '#F8FAFC' },
-  container:     { flex: 1 },
+  safe:      { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1 },
   header: {
-    flexDirection:    'row',
-    justifyContent:   'space-between',
-    alignItems:       'flex-start',
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'flex-start',
     paddingHorizontal: 20,
     paddingTop:        20,
     paddingBottom:     16,
-    backgroundColor:  '#FFFFFF',
+    backgroundColor:   '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
-  greeting:      { fontSize: 13, color: '#94A3B8', fontWeight: '500' },
-  adminName:     { fontSize: 22, fontWeight: '800', color: '#0F172A', marginTop: 2 },
-  role:          { fontSize: 12, color: '#1D4ED8', fontWeight: '600', marginTop: 2 },
+  menuBtn:   { padding: 8, marginRight: 12, justifyContent: 'center' },  // ✅ new
+  menuIcon:  { fontSize: 22, color: '#0F172A' },                          // ✅ new
+  greeting:  { fontSize: 13, color: '#94A3B8', fontWeight: '500' },
+  adminName: { fontSize: 22, fontWeight: '800', color: '#0F172A', marginTop: 2 },
+  role:      { fontSize: 12, color: '#1D4ED8', fontWeight: '600', marginTop: 2 },
   settingsBtn:   { padding: 8, backgroundColor: '#F1F5F9', borderRadius: 10 },
   settingsIcon:  { fontSize: 20 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginTop: 20, marginBottom: 4 },
@@ -211,9 +226,9 @@ const styles = StyleSheet.create({
     shadowRadius:    8,
     elevation:       2,
   },
-  actionIcon:    { fontSize: 26, marginBottom: 4 },
-  actionLabel:   { fontSize: 10, color: '#334155', fontWeight: '600', textAlign: 'center' },
-  recentList:    { paddingHorizontal: 16, marginTop: 8 },
+  actionIcon:  { fontSize: 26, marginBottom: 4 },
+  actionLabel: { fontSize: 10, color: '#334155', fontWeight: '600', textAlign: 'center' },
+  recentList:  { paddingHorizontal: 16, marginTop: 8 },
   recentItem: {
     flexDirection:   'row',
     alignItems:      'center',
