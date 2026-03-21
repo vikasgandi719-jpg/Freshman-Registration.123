@@ -1,4 +1,10 @@
-module.exports = {
-  JWT_SECRET: process.env.JWT_SECRET || "your-secret-key",
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
-};
+const jwt = require('jsonwebtoken');
+
+const SECRET = process.env.JWT_SECRET || 'changeme';
+const EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+const signToken = (payload) => jwt.sign(payload, SECRET, { expiresIn: EXPIRES_IN });
+
+const verifyToken = (token) => jwt.verify(token, SECRET);
+
+module.exports = { signToken, verifyToken };
