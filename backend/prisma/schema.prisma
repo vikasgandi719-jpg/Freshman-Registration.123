@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- ENUMS ----------
+enum UserType {
+  REGULAR
+  LATERAL
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ---------- ADMIN ----------
+model Admin {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+// ---------- BRANCH ----------
+model Branch {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  users User[]
+}
+
+// ---------- USER (STUDENT) ----------
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String   @unique
+  rollNo    String   @unique
+  type      UserType
+  branchId  Int
+  createdAt DateTime @default(now())
+
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  documents Document[]
+  otps      OTP[]
+}
+
+// ---------- DOCUMENT ----------
+model Document {
+  id         Int            @id @default(autoincrement())
+  userId     Int
+  title      String
+  fileUrl    String
+  status     DocumentStatus @default(PENDING)
+  reason     String?        // for rejection reason
+  verifiedBy Int?           // admin id
+  createdAt  DateTime       @default(now())
+
+  user       User  @relation(fields: [userId], references: [id])
+}
+
+// ---------- OTP ----------
+model OTP {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+}
