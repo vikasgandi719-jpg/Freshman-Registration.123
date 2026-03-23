@@ -11,6 +11,7 @@ import StudentDetailScreen from "../screens/admin/StudentDetailScreen";
 import VerificationScreen from "../screens/admin/VerificationScreen";
 import BranchManagementScreen from "../screens/admin/BranchManagementScreen";
 import AdminSettingsScreen from "../screens/admin/AdminSettingsScreen";
+import AdminManagementScreen from "../screens/admin/AdminManagementScreen";
 import AdminSidebar from "../components/admin/AdminSidebar";
 
 const Drawer = createDrawerNavigator();
@@ -27,6 +28,7 @@ const CustomDrawerContent = (props) => {
     [SCREENS.STUDENT_LIST]: "students",
     [SCREENS.VERIFICATION]: "verification",
     [SCREENS.BRANCH_MANAGEMENT]: "branches",
+    [SCREENS.ADMIN_MANAGEMENT]: "admins",
     [SCREENS.ADMIN_SETTINGS]: "settings",
   };
 
@@ -78,6 +80,10 @@ const AdminDrawer = () => {
       <Drawer.Screen
         name={SCREENS.BRANCH_MANAGEMENT}
         component={BranchManagementScreen}
+      />
+      <Drawer.Screen
+        name={SCREENS.ADMIN_MANAGEMENT}
+        component={AdminManagementScreen}
       />
       <Drawer.Screen
         name={SCREENS.ADMIN_SETTINGS}

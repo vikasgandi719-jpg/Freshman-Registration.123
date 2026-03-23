@@ -8,11 +8,12 @@ import {
 } from "react-native";
 
 const MENU_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: "🏠" },
-  { id: "students", label: "Students", icon: "🎓" },
-  { id: "verification", label: "Verification", icon: "✅" },
-  { id: "branches", label: "Branch Management", icon: "🏫" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "dashboard", label: "Dashboard", icon: "D" },
+  { id: "students", label: "Students", icon: "S" },
+  { id: "verification", label: "Verification", icon: "V" },
+  { id: "branches", label: "Branch Management", icon: "B" },
+  { id: "admins", label: "Admin Management", icon: "A" },
+  { id: "settings", label: "Settings", icon: "G" },
 ];
 
 const AdminSidebar = ({
@@ -70,7 +71,7 @@ const AdminSidebar = ({
 
       {/* Logout */}
       <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
-        <Text style={styles.logoutIcon}>🚪</Text>
+        <Text style={styles.logoutIcon}>L</Text>
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>

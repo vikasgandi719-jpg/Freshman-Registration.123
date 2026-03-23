@@ -47,12 +47,23 @@ const studentReducer = (state, action) => {
     case STUDENT_ACTIONS.SET_DOCUMENTS:
       return { ...state, documents: action.payload, isLoading: false };
 
-    case STUDENT_ACTIONS.UPDATE_DOCUMENT: {
-      const updated = state.documents.map((doc) =>
-        doc.id === action.payload.id ? { ...doc, ...action.payload } : doc
-      );
-      return { ...state, documents: updated };
-    }
+      case STUDENT_ACTIONS.UPDATE_DOCUMENT: {
+        const exists = state.documents.some((doc) => doc.id === action.payload.id);
+      
+        if (exists) {
+          return {
+            ...state,
+            documents: state.documents.map((doc) =>
+              doc.id === action.payload.id ? { ...doc, ...action.payload } : doc
+            ),
+          };
+        }
+      
+        return {
+          ...state,
+          documents: [...state.documents, action.payload],
+        };
+      }
 
     case STUDENT_ACTIONS.SET_UPLOAD_PROGRESS:
       return {

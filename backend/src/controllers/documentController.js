@@ -2,7 +2,6 @@ const Document = require('../models/Document');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../services/storageService');
 const { success, error } = require('../utils/responseHelper');
 
-// GET /api/documents  (student sees own; admin can pass ?studentId=)
 exports.getDocuments = async (req, res, next) => {
   try {
     const studentId = req.query.studentId || req.user?.id;
@@ -13,18 +12,25 @@ exports.getDocuments = async (req, res, next) => {
   }
 };
 
-// GET /api/documents/:id
 exports.getDocumentById = async (req, res, next) => {
   try {
-    const doc = await Document.findById(req.params.id);
+    const idOrType = req.params.id;
+    const studentId = req.user?.id;
+
+    let doc = await Document.findById(idOrType);
+
+    if (!doc && studentId) {
+      doc = await Document.findByStudentAndType(studentId, idOrType);
+    }
+
     if (!doc) return error(res, 'Document not found', 404);
+
     return success(res, { data: doc });
   } catch (err) {
     next(err);
   }
 };
 
-// POST /api/documents/upload/:documentType
 exports.uploadDocument = async (req, res, next) => {
   try {
     if (!req.file) return error(res, 'No file uploaded', 400);
@@ -54,14 +60,12 @@ exports.uploadDocument = async (req, res, next) => {
   }
 };
 
-// DELETE /api/documents/:id
 exports.deleteDocument = async (req, res, next) => {
   try {
     const doc = await Document.findById(req.params.id);
     if (!doc) return error(res, 'Document not found', 404);
     if (doc.student_id !== req.user.id) return error(res, 'Forbidden', 403);
 
-    // Extract cloudinary public_id from URL
     if (doc.file_url) {
       const parts = doc.file_url.split('/');
       const publicId = parts.slice(-2).join('/').replace(/\.[^/.]+$/, '');
@@ -75,12 +79,23 @@ exports.deleteDocument = async (req, res, next) => {
   }
 };
 
-// GET /api/documents/status/:id
 exports.getDocumentStatus = async (req, res, next) => {
   try {
-    const doc = await Document.findById(req.params.id);
+    const idOrType = req.params.id;
+    const studentId = req.user?.id;
+
+    let doc = await Document.findById(idOrType);
+
+    if (!doc && studentId) {
+      doc = await Document.findByStudentAndType(studentId, idOrType);
+    }
+
     if (!doc) return error(res, 'Document not found', 404);
-    return success(res, { status: doc.status, rejectionReason: doc.rejection_reason });
+
+    return success(res, {
+      status: doc.status,
+      rejectionReason: doc.rejection_reason,
+    });
   } catch (err) {
     next(err);
   }
