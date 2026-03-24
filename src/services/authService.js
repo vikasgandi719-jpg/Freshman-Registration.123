@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API } from '../constants/config';
 import { addDemoStudent } from './adminService';  // one-way import, no circular dep
 
-const DEMO_MODE = true;
+const DEMO_MODE = String(process.env.EXPO_PUBLIC_DEMO_MODE || "false").toLowerCase() === "true";
 
 let storedUserData = null;
 let studentCounter = 1;

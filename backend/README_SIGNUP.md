@@ -49,3 +49,19 @@ curl -X POST http://localhost:5000/api/auth/signup \
 - `400` for validation errors
 - `409` when email already exists
 - `500` for unexpected server errors
+
+## Troubleshooting: "Data is not stored in DB"
+
+1. **Frontend Demo Mode enabled**
+   - `src/services/authService.js` uses `EXPO_PUBLIC_DEMO_MODE`.
+   - If this is `true`, API requests are mocked and nothing is written to DB.
+
+2. **Signup payload mismatch**
+   - Frontend must send `name`, `email`, `password` (and optional `file`) as multipart.
+   - Missing `email`/`password` results in `400`.
+
+3. **Database/migration not applied**
+   - If Prisma migrations are not applied, `prisma.user.create` will fail at runtime.
+
+4. **Invalid API URL**
+   - Ensure `API.BASE_URL` points to your running backend.

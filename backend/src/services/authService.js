@@ -34,21 +34,31 @@ const signup = async ({ name, email, password, fileUrl }) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  return prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-      fileUrl,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      fileUrl: true,
-      createdAt: true,
-    },
-  });
+  try {
+    return await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        fileUrl,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        fileUrl: true,
+        createdAt: true,
+      },
+    });
+  } catch (dbError) {
+    if (dbError.code === 'P2002') {
+      const conflictError = new Error('User already exists');
+      conflictError.statusCode = 409;
+      throw conflictError;
+    }
+
+    throw dbError;
+  }
 };
 
 module.exports = {
