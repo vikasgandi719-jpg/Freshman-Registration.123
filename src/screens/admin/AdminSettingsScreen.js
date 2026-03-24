@@ -1,26 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  View, Text, ScrollView, StyleSheet,
-  SafeAreaView, TouchableOpacity, Switch, Alert,
-} from 'react-native';
-import Header        from '../../components/common/Header';
-import { useAdmin }  from '../../context/AdminContext';
-import { useTheme }  from '../../context/ThemeContext';
-import { ADMIN_ROLE_LABELS } from '../../constants/adminRoles';
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Switch,
+  Alert,
+} from "react-native";
+import Header from "../../components/common/Header";
+import { useAdmin } from "../../context/AdminContext";
+import { useTheme } from "../../context/ThemeContext";
+import { ADMIN_ROLE_LABELS } from "../../constants/adminRoles";
 
-const SettingRow = ({ icon, label, subtitle, value, onPress, showArrow = true, danger = false, rightComponent }) => (
-  <TouchableOpacity style={styles.settingRow} onPress={onPress} activeOpacity={onPress ? 0.75 : 1}>
-    <View style={[styles.settingIconBox, danger && styles.settingIconBoxDanger]}>
+const SettingRow = ({
+  icon,
+  label,
+  subtitle,
+  value,
+  onPress,
+  showArrow = true,
+  danger = false,
+  rightComponent,
+}) => (
+  <TouchableOpacity
+    style={styles.settingRow}
+    onPress={onPress}
+    activeOpacity={onPress ? 0.75 : 1}
+  >
+    <View
+      style={[styles.settingIconBox, danger && styles.settingIconBoxDanger]}
+    >
       <Text style={styles.settingIcon}>{icon}</Text>
     </View>
     <View style={styles.settingInfo}>
-      <Text style={[styles.settingLabel, danger && styles.settingLabelDanger]}>{label}</Text>
+      <Text style={[styles.settingLabel, danger && styles.settingLabelDanger]}>
+        {label}
+      </Text>
       {subtitle ? <Text style={styles.settingSubtitle}>{subtitle}</Text> : null}
     </View>
     {rightComponent
       ? rightComponent
-      : (showArrow && <Text style={styles.arrow}>›</Text>)
-    }
+      : showArrow && <Text style={styles.arrow}>›</Text>}
   </TouchableOpacity>
 );
 
@@ -29,73 +51,89 @@ const SectionHeader = ({ title }) => (
 );
 
 const AdminSettingsScreen = ({ navigation }) => {
-  const { admin, logoutAdmin }    = useAdmin();
-  const { isDark, toggleTheme }   = useTheme();
+  const { admin, logoutAdmin } = useAdmin();
+  const { isDark, toggleTheme, theme } = useTheme();
   const [notifications, setNotifications] = useState(true);
-  const [emailAlerts,   setEmailAlerts]   = useState(false);
+  const [emailAlerts, setEmailAlerts] = useState(false);
+
+  const colors = theme.colors;
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => logoutAdmin() },
-      ]
-    );
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Logout", style: "destructive", onPress: () => logoutAdmin() },
+    ]);
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <Header title="Settings" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Admin Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileAvatar}>
+        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
+          <View
+            style={[styles.profileAvatar, { backgroundColor: colors.primary }]}
+          >
             <Text style={styles.profileAvatarText}>
-              {(admin?.name || 'A').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+              {(admin?.name || "A")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
             </Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{admin?.name || 'Admin'}</Text>
-            <Text style={styles.profileEmail}>{admin?.email || ''}</Text>
-            <View style={styles.profileRoleBadge}>
-              <Text style={styles.profileRoleText}>
-                {ADMIN_ROLE_LABELS[admin?.role] || admin?.role || 'Admin'}
+            <Text style={[styles.profileName, { color: colors.text }]}>
+              {admin?.name || "Admin"}
+            </Text>
+            <Text
+              style={[styles.profileEmail, { color: colors.textSecondary }]}
+            >
+              {admin?.email || ""}
+            </Text>
+            <View
+              style={[
+                styles.profileRoleBadge,
+                { backgroundColor: colors.primaryLight },
+              ]}
+            >
+              <Text style={[styles.profileRoleText, { color: colors.primary }]}>
+                {ADMIN_ROLE_LABELS[admin?.role] || admin?.role || "Admin"}
               </Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.editProfileBtn}>
-            <Text style={styles.editProfileBtnText}>Edit</Text>
+          <TouchableOpacity
+            style={[styles.editProfileBtn, { backgroundColor: colors.input }]}
+          >
+            <Text style={[styles.editProfileBtnText, { color: colors.text }]}>
+              Edit
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Appearance */}
         <SectionHeader title="APPEARANCE" />
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
           <SettingRow
-            icon="🌙"
+            icon="D"
             label="Dark Mode"
-            subtitle={isDark ? 'Currently dark' : 'Currently light'}
+            subtitle={isDark ? "Currently dark" : "Currently light"}
             showArrow={false}
             rightComponent={
               <Switch
                 value={isDark}
                 onValueChange={toggleTheme}
-                trackColor={{ false: '#E2E8F0', true: '#1D4ED8' }}
+                trackColor={{ false: "#E2E8F0", true: "#1D4ED8" }}
                 thumbColor="#FFFFFF"
               />
             }
           />
         </View>
 
-        {/* Notifications */}
         <SectionHeader title="NOTIFICATIONS" />
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
           <SettingRow
-            icon="🔔"
+            icon="N"
             label="Push Notifications"
             subtitle="New student registrations"
             showArrow={false}
@@ -103,14 +141,16 @@ const AdminSettingsScreen = ({ navigation }) => {
               <Switch
                 value={notifications}
                 onValueChange={setNotifications}
-                trackColor={{ false: '#E2E8F0', true: '#1D4ED8' }}
+                trackColor={{ false: "#E2E8F0", true: "#1D4ED8" }}
                 thumbColor="#FFFFFF"
               />
             }
           />
-          <View style={styles.rowDivider} />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.borderLight }]}
+          />
           <SettingRow
-            icon="✉️"
+            icon="E"
             label="Email Alerts"
             subtitle="Daily summary reports"
             showArrow={false}
@@ -118,38 +158,73 @@ const AdminSettingsScreen = ({ navigation }) => {
               <Switch
                 value={emailAlerts}
                 onValueChange={setEmailAlerts}
-                trackColor={{ false: '#E2E8F0', true: '#1D4ED8' }}
+                trackColor={{ false: "#E2E8F0", true: "#1D4ED8" }}
                 thumbColor="#FFFFFF"
               />
             }
           />
         </View>
 
-        {/* Account */}
         <SectionHeader title="ACCOUNT" />
-        <View style={styles.section}>
-          <SettingRow icon="🔑" label="Change Password"   subtitle="Update your password"     onPress={() => {}} />
-          <View style={styles.rowDivider} />
-          <SettingRow icon="📧" label="Update Email"      subtitle={admin?.email || ''}       onPress={() => {}} />
-          <View style={styles.rowDivider} />
-          <SettingRow icon="📱" label="Update Phone"      subtitle={admin?.phone || ''}       onPress={() => {}} />
-        </View>
-
-        {/* System */}
-        <SectionHeader title="SYSTEM" />
-        <View style={styles.section}>
-          <SettingRow icon="📊" label="Export Data"       subtitle="Download student reports" onPress={() => {}} />
-          <View style={styles.rowDivider} />
-          <SettingRow icon="🗂️" label="Manage Documents"  subtitle="Edit document types"      onPress={() => {}} />
-          <View style={styles.rowDivider} />
-          <SettingRow icon="ℹ️" label="App Version"       subtitle="v1.0.0"                   showArrow={false} />
-        </View>
-
-        {/* Danger Zone */}
-        <SectionHeader title="DANGER ZONE" />
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
           <SettingRow
-            icon="🚪"
+            icon="K"
+            label="Change Password"
+            subtitle="Update your password"
+            onPress={() => {}}
+          />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.borderLight }]}
+          />
+          <SettingRow
+            icon="M"
+            label="Update Email"
+            subtitle={admin?.email || ""}
+            onPress={() => {}}
+          />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.borderLight }]}
+          />
+          <SettingRow
+            icon="P"
+            label="Update Phone"
+            subtitle={admin?.phone || ""}
+            onPress={() => {}}
+          />
+        </View>
+
+        <SectionHeader title="SYSTEM" />
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <SettingRow
+            icon="R"
+            label="Export Data"
+            subtitle="Download student reports"
+            onPress={() => {}}
+          />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.borderLight }]}
+          />
+          <SettingRow
+            icon="F"
+            label="Manage Documents"
+            subtitle="Edit document types"
+            onPress={() => {}}
+          />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.borderLight }]}
+          />
+          <SettingRow
+            icon="I"
+            label="App Version"
+            subtitle="v1.0.0"
+            showArrow={false}
+          />
+        </View>
+
+        <SectionHeader title="DANGER ZONE" />
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <SettingRow
+            icon="L"
             label="Logout"
             subtitle="Sign out of your account"
             danger
@@ -164,60 +239,88 @@ const AdminSettingsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#F8FAFC' },
+  safe: { flex: 1 },
   profileCard: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    backgroundColor:  '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: 16,
-    marginTop:        16,
-    padding:          16,
-    borderRadius:     16,
-    shadowColor:      '#000',
-    shadowOffset:     { width: 0, height: 2 },
-    shadowOpacity:    0.07,
-    shadowRadius:     10,
-    elevation:        3,
-    gap:              12,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 3,
+    gap: 12,
   },
   profileAvatar: {
-    width:           56,
-    height:          56,
-    borderRadius:    28,
-    backgroundColor: '#1D4ED8',
-    justifyContent:  'center',
-    alignItems:      'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  profileAvatarText: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  profileInfo:       { flex: 1 },
-  profileName:       { fontSize: 16, fontWeight: '700', color: '#0F172A' },
-  profileEmail:      { fontSize: 12, color: '#64748B', marginTop: 2 },
-  profileRoleBadge:  { marginTop: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20, alignSelf: 'flex-start' },
-  profileRoleText:   { fontSize: 11, color: '#1D4ED8', fontWeight: '600' },
-  editProfileBtn:    { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#F1F5F9', borderRadius: 8 },
-  editProfileBtnText:{ fontSize: 13, color: '#334155', fontWeight: '600' },
-  sectionHeader:     { fontSize: 11, fontWeight: '700', color: '#94A3B8', letterSpacing: 1, paddingHorizontal: 24, marginTop: 24, marginBottom: 6 },
+  profileAvatarText: { fontSize: 20, fontWeight: "800", color: "#FFFFFF" },
+  profileInfo: { flex: 1 },
+  profileName: { fontSize: 16, fontWeight: "700" },
+  profileEmail: { fontSize: 12, marginTop: 2 },
+  profileRoleBadge: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+    alignSelf: "flex-start",
+  },
+  profileRoleText: { fontSize: 11, fontWeight: "600" },
+  editProfileBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  editProfileBtnText: { fontSize: 13, fontWeight: "600" },
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 1,
+    paddingHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 6,
+  },
   section: {
-    backgroundColor:  '#FFFFFF',
     marginHorizontal: 16,
-    borderRadius:     14,
-    overflow:         'hidden',
-    shadowColor:      '#000',
-    shadowOffset:     { width: 0, height: 1 },
-    shadowOpacity:    0.04,
-    shadowRadius:     6,
-    elevation:        1,
+    borderRadius: 14,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  settingRow:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  settingIconBox:     { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  settingIconBoxDanger:{ backgroundColor: '#FFF1F2' },
-  settingIcon:        { fontSize: 18 },
-  settingInfo:        { flex: 1 },
-  settingLabel:       { fontSize: 14, fontWeight: '600', color: '#1E293B' },
-  settingLabelDanger: { color: '#BE123C' },
-  settingSubtitle:    { fontSize: 12, color: '#94A3B8', marginTop: 1 },
-  arrow:              { fontSize: 22, color: '#CBD5E1', fontWeight: '300' },
-  rowDivider:         { height: 1, backgroundColor: '#F1F5F9', marginLeft: 64 },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  settingIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  settingIconBoxDanger: { backgroundColor: "#FFF1F2" },
+  settingIcon: { fontSize: 16, fontWeight: "700", color: "#64748B" },
+  settingInfo: { flex: 1 },
+  settingLabel: { fontSize: 14, fontWeight: "600", color: "#1E293B" },
+  settingLabelDanger: { color: "#BE123C" },
+  settingSubtitle: { fontSize: 12, color: "#94A3B8", marginTop: 1 },
+  arrow: { fontSize: 22, color: "#CBD5E1", fontWeight: "300" },
+  rowDivider: { height: 1, backgroundColor: "#F1F5F9", marginLeft: 64 },
 });
 
 export default AdminSettingsScreen;

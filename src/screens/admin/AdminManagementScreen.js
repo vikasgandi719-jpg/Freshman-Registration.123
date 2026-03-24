@@ -16,7 +16,7 @@ import {
   ADMIN_ROLE_LABELS,
   ADMIN_ROLE_COLORS,
 } from "../../constants/adminRoles";
-import { hasPermission } from "../../constants/adminRoles";
+import { useTheme } from "../../context/ThemeContext";
 
 const demoAdmins = [
   {
@@ -50,12 +50,13 @@ const demoAdmins = [
 ];
 
 const AdminManagementScreen = ({ navigation }) => {
+  const { theme } = useTheme();
+  const colors = theme.colors;
   const [admins, setAdmins] = useState(demoAdmins);
   const [filterRole, setFilterRole] = useState("all");
   const [filterBranch, setFilterBranch] = useState("all");
   const [search, setSearch] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState(null);
   const [newAdmin, setNewAdmin] = useState({
     name: "",
     email: "",
@@ -105,11 +106,7 @@ const AdminManagementScreen = ({ navigation }) => {
       Alert.alert("Error", "Please fill all fields");
       return;
     }
-    const admin = {
-      id: `admin_${Date.now()}`,
-      ...newAdmin,
-    };
-    setAdmins((prev) => [...prev, admin]);
+    setAdmins((prev) => [...prev, { id: `admin_${Date.now()}`, ...newAdmin }]);
     setModalVisible(false);
     setNewAdmin({ name: "", email: "", role: "branch_admin", branchId: "" });
   };
@@ -117,7 +114,7 @@ const AdminManagementScreen = ({ navigation }) => {
   const renderItem = ({ item }) => {
     const roleColor = ADMIN_ROLE_COLORS[item.role] || ADMIN_ROLE_COLORS.viewer;
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
         <View style={styles.cardBody}>
           <View style={styles.cardTop}>
             <View style={[styles.roleBadge, { backgroundColor: roleColor.bg }]}>
@@ -126,15 +123,21 @@ const AdminManagementScreen = ({ navigation }) => {
               </Text>
             </View>
             {item.branchId && (
-              <Text style={styles.branchText}>
+              <Text
+                style={[styles.branchText, { color: colors.textSecondary }]}
+              >
                 {getBranchName(item.branchId)}
               </Text>
             )}
           </View>
-          <Text style={styles.adminName}>{item.name}</Text>
-          <Text style={styles.adminEmail}>{item.email}</Text>
+          <Text style={[styles.adminName, { color: colors.text }]}>
+            {item.name}
+          </Text>
+          <Text style={[styles.adminEmail, { color: colors.textSecondary }]}>
+            {item.email}
+          </Text>
         </View>
-        <View style={styles.cardActions}>
+        <View style={[styles.cardActions, { borderTopColor: colors.border }]}>
           <TouchableOpacity
             style={styles.deleteBtn}
             onPress={() => handleDelete(item)}
@@ -155,46 +158,53 @@ const AdminManagementScreen = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <Header
         title="Admin Management"
         subtitle={`${filteredAdmins.length} admins`}
         onBack={() => navigation.goBack()}
       />
 
-      <View style={styles.filters}>
+      <View
+        style={[
+          styles.filters,
+          { backgroundColor: colors.card, borderBottomColor: colors.border },
+        ]}
+      >
         <TextInput
-          style={styles.searchInput}
+          style={[
+            styles.searchInput,
+            { backgroundColor: colors.input, color: colors.text },
+          ]}
           placeholder="Search admins..."
+          placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
         />
-        <View style={styles.filterRow}>
-          <FlatList
-            horizontal
-            data={roles}
-            keyExtractor={(item) => item}
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity
+        <FlatList
+          horizontal
+          data={roles}
+          keyExtractor={(item) => item}
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                filterRole === item && styles.filterChipActive,
+              ]}
+              onPress={() => setFilterRole(item)}
+            >
+              <Text
                 style={[
-                  styles.filterChip,
-                  filterRole === item && styles.filterChipActive,
+                  styles.filterChipText,
+                  filterRole === item && styles.filterChipTextActive,
                 ]}
-                onPress={() => setFilterRole(item)}
               >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filterRole === item && styles.filterChipTextActive,
-                  ]}
-                >
-                  {item === "all" ? "All" : ADMIN_ROLE_LABELS[item]}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+                {item === "all" ? "All" : ADMIN_ROLE_LABELS[item]}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
         <View style={styles.filterRow}>
           <TouchableOpacity
             style={[
@@ -209,7 +219,7 @@ const AdminManagementScreen = ({ navigation }) => {
                 filterBranch === "all" && styles.filterChipTextActive,
               ]}
             >
-              All Branches
+              All
             </Text>
           </TouchableOpacity>
           {BRANCHES.map((branch) => (
@@ -242,7 +252,9 @@ const AdminManagementScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.centered}>
-            <Text style={styles.emptyText}>No admins found.</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No admins found.
+            </Text>
           </View>
         }
       />
@@ -261,22 +273,34 @@ const AdminManagementScreen = ({ navigation }) => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Admin</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Add New Admin
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: colors.input, color: colors.text },
+              ]}
               placeholder="Name"
+              placeholderTextColor={colors.textSecondary}
               value={newAdmin.name}
               onChangeText={(text) => setNewAdmin({ ...newAdmin, name: text })}
             />
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: colors.input, color: colors.text },
+              ]}
               placeholder="Email"
+              placeholderTextColor={colors.textSecondary}
               value={newAdmin.email}
               onChangeText={(text) => setNewAdmin({ ...newAdmin, email: text })}
               keyboardType="email-address"
             />
-            <Text style={styles.inputLabel}>Role</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>
+              Role
+            </Text>
             <View style={styles.roleSelector}>
               {["branch_admin", "verification_officer", "document_officer"].map(
                 (role) => (
@@ -300,58 +324,19 @@ const AdminManagementScreen = ({ navigation }) => {
                 ),
               )}
             </View>
-            {newAdmin.role !== "super_admin" && (
-              <>
-                <Text style={styles.inputLabel}>Branch</Text>
-                <View style={styles.roleSelector}>
-                  <TouchableOpacity
-                    style={[
-                      styles.roleOption,
-                      !newAdmin.branchId && styles.roleOptionActive,
-                    ]}
-                    onPress={() => setNewAdmin({ ...newAdmin, branchId: "" })}
-                  >
-                    <Text
-                      style={[
-                        styles.roleOptionText,
-                        !newAdmin.branchId && styles.roleOptionTextActive,
-                      ]}
-                    >
-                      All
-                    </Text>
-                  </TouchableOpacity>
-                  {BRANCHES.map((branch) => (
-                    <TouchableOpacity
-                      key={branch.id}
-                      style={[
-                        styles.roleOption,
-                        newAdmin.branchId === branch.id &&
-                          styles.roleOptionActive,
-                      ]}
-                      onPress={() =>
-                        setNewAdmin({ ...newAdmin, branchId: branch.id })
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.roleOptionText,
-                          newAdmin.branchId === branch.id &&
-                            styles.roleOptionTextActive,
-                        ]}
-                      >
-                        {branch.shortName}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            )}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.cancelBtn}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text
+                  style={[
+                    styles.cancelBtnText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={handleAddAdmin}>
                 <Text style={styles.saveBtnText}>Add</Text>
@@ -365,26 +350,10 @@ const AdminManagementScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F8FAFC" },
-  filters: {
-    padding: 16,
-    backgroundColor: "#FFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-  },
-  searchInput: {
-    backgroundColor: "#F1F5F9",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 8,
-  },
+  safe: { flex: 1 },
+  filters: { padding: 16, borderBottomWidth: 1 },
+  searchInput: { borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 12 },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -397,7 +366,6 @@ const styles = StyleSheet.create({
   filterChipTextActive: { color: "#FFF", fontWeight: "600" },
   list: { padding: 16 },
   card: {
-    backgroundColor: "#FFF",
     borderRadius: 12,
     marginBottom: 12,
     overflow: "hidden",
@@ -416,24 +384,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   roleBadgeText: { fontSize: 11, fontWeight: "600" },
-  branchText: { fontSize: 12, color: "#64748B" },
-  adminName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1E293B",
-    marginBottom: 2,
-  },
-  adminEmail: { fontSize: 13, color: "#64748B" },
-  cardActions: {
-    flexDirection: "row",
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-    padding: 8,
-  },
+  branchText: { fontSize: 12 },
+  adminName: { fontSize: 16, fontWeight: "700", marginBottom: 2 },
+  adminEmail: { fontSize: 13 },
+  cardActions: { flexDirection: "row", borderTopWidth: 1, padding: 8 },
   deleteBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 6 },
   deleteBtnText: { fontSize: 12, color: "#BE123C", fontWeight: "600" },
   centered: { alignItems: "center", paddingVertical: 60 },
-  emptyText: { fontSize: 14, color: "#94A3B8" },
+  emptyText: { fontSize: 14 },
   fab: {
     position: "absolute",
     bottom: 20,
@@ -442,10 +400,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderRadius: 28,
-    shadowColor: "#1D4ED8",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
     elevation: 4,
   },
   fabText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
@@ -456,31 +410,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 20,
     width: "90%",
     maxHeight: "80%",
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1E293B",
-    marginBottom: 16,
-  },
-  input: {
-    backgroundColor: "#F1F5F9",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1E293B",
-    marginBottom: 8,
-  },
+  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 16 },
+  input: { borderRadius: 8, padding: 12, fontSize: 14, marginBottom: 12 },
+  inputLabel: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
   roleSelector: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -498,7 +435,7 @@ const styles = StyleSheet.create({
   roleOptionTextActive: { color: "#FFF", fontWeight: "600" },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 12 },
   cancelBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
-  cancelBtnText: { fontSize: 14, color: "#64748B", fontWeight: "600" },
+  cancelBtnText: { fontSize: 14, fontWeight: "600" },
   saveBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,

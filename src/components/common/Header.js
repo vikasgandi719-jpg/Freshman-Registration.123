@@ -1,64 +1,62 @@
-import React from 'react';
+import React from "react";
 import {
-  View, Text, TouchableOpacity,
-  StyleSheet, StatusBar, Platform,
-} from 'react-native';
-
-/**
- * Header
- * Props:
- *  - title: string
- *  - subtitle: string
- *  - onBack: () => void
- *  - rightComponent: ReactNode
- *  - variant: 'default' | 'transparent' | 'dark'
- *  - showBorder: boolean
- */
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  Platform,
+} from "react-native";
+import { useTheme } from "../../context/ThemeContext";
 
 const Header = ({
-  title = '',
+  title = "",
   subtitle = null,
   onBack = null,
   rightComponent = null,
-  variant = 'default',
+  variant = "default",
   showBorder = true,
 }) => {
-  const isDark = variant === 'dark';
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const isDark = variant === "dark";
 
   return (
     <View
       style={[
         styles.container,
-        isDark && styles.containerDark,
-        variant === 'transparent' && styles.containerTransparent,
-        showBorder && !isDark && styles.containerBorder,
+        isDark && { backgroundColor: colors.background },
+        variant === "transparent" && styles.containerTransparent,
+        showBorder && !isDark && { borderBottomColor: colors.border },
+        showBorder && { borderBottomWidth: 1 },
       ]}
     >
-      {/* Left: back button */}
       <View style={styles.side}>
         {onBack && (
-          <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.75}>
-            <Text style={[styles.backIcon, isDark && styles.textLight]}>‹</Text>
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: colors.input }]}
+            onPress={onBack}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.backIcon, { color: colors.text }]}>‹</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Center: title */}
       <View style={styles.center}>
-        <Text
-          style={[styles.title, isDark && styles.textLight]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
         {subtitle && (
-          <Text style={[styles.subtitle, isDark && styles.subtitleLight]} numberOfLines={1}>
+          <Text
+            style={[styles.subtitle, { color: colors.textSecondary }]}
+            numberOfLines={1}
+          >
             {subtitle}
           </Text>
         )}
       </View>
 
-      {/* Right: custom component */}
       <View style={[styles.side, styles.sideRight]}>
         {rightComponent || null}
       </View>
@@ -68,66 +66,48 @@ const Header = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 54 : StatusBar.currentHeight + 10 || 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: Platform.OS === "ios" ? 54 : StatusBar.currentHeight + 10 || 10,
     paddingBottom: 14,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  containerDark: {
-    backgroundColor: '#0F172A',
   },
   containerTransparent: {
-    backgroundColor: 'transparent',
-  },
-  containerBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    backgroundColor: "transparent",
   },
   side: {
     width: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignItems: "flex-start",
+    justifyContent: "center",
   },
   sideRight: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   backIcon: {
     fontSize: 26,
-    color: '#1E293B',
     lineHeight: 30,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: -2,
   },
   center: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 17,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 12,
-    color: '#94A3B8',
     marginTop: 2,
-  },
-  textLight: {
-    color: '#FFFFFF',
-  },
-  subtitleLight: {
-    color: '#94A3B8',
   },
 });
 

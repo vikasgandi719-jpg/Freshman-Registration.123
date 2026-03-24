@@ -659,22 +659,26 @@ const StudentDashboard = ({ navigation }) => {
           {renderDocUpload("income_certificate", "Income Certificate")}
         </View>
 
-        {/* Higher Studies Card */}
+        {/* Higher Studies & Placement Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Higher Studies Interest</Text>
+            <Text style={styles.cardTitle}>Career Interest</Text>
+            <TouchableOpacity onPress={openEmacet}>
+              <Text style={styles.editLink}>Edit</Text>
+            </TouchableOpacity>
           </View>
 
+          <Text style={styles.sectionLabel}>Higher Studies</Text>
           <View style={styles.higherStudiesBox}>
             {student.higherStudiesInterest === "yes" ? (
               <>
                 <View style={styles.interestTag}>
-                  <Text style={styles.interestTagText}>✅ Interested</Text>
+                  <Text style={styles.interestTagText}>Interested</Text>
                 </View>
                 <Text style={styles.interestDetail}>
                   {student.higherStudiesCountry === "abroad"
-                    ? `🌍 Abroad - ${student.higherStudiesCountryDetail || "Not specified"}`
-                    : "🇮🇳 India"}
+                    ? `Abroad - ${student.higherStudiesCountryDetail || "Not specified"}`
+                    : "India"}
                 </Text>
                 {student.higherStudiesProgram && (
                   <Text style={styles.interestDetail}>
@@ -684,11 +688,21 @@ const StudentDashboard = ({ navigation }) => {
               </>
             ) : student.higherStudiesInterest === "no" ? (
               <View style={styles.interestTag}>
-                <Text style={styles.interestTagText}>❌ Not Interested</Text>
+                <Text style={styles.interestTagText}>Not Interested</Text>
               </View>
             ) : (
               <Text style={styles.notSet}>Not updated yet</Text>
             )}
+          </View>
+
+          <Text style={[styles.sectionLabel, { marginTop: 16 }]}>
+            Placement
+          </Text>
+          <View style={styles.detailItemFull}>
+            <Text style={styles.detailLabel}>Domain Interest</Text>
+            <Text style={styles.detailValue}>
+              {student.placementDomain || "-"}
+            </Text>
           </View>
         </View>
 
@@ -727,23 +741,6 @@ const StudentDashboard = ({ navigation }) => {
             <Text style={styles.detailLabel}>Books & Newspaper</Text>
             <Text style={styles.detailValue}>
               {student.booksNewspaper || "-"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Placement Details Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Placement</Text>
-            <TouchableOpacity onPress={openPlacement}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Domain Interest</Text>
-            <Text style={styles.detailValue}>
-              {student.placementDomain || "-"}
             </Text>
           </View>
         </View>
@@ -1485,6 +1482,12 @@ const styles = StyleSheet.create({
   },
   interestTagText: { fontSize: 13, fontWeight: "600", color: "#16A34A" },
   interestDetail: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#64748B",
+    marginBottom: 8,
+  },
   notSet: { fontSize: 14, color: "#94A3B8" },
 
   modalSectionTitle: {

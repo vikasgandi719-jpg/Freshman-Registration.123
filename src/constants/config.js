@@ -114,6 +114,9 @@ export const SCREENS = {
   BRANCH_MANAGEMENT: "BranchManagementScreen",
   ADMIN_SETTINGS: "AdminSettingsScreen",
   ADMIN_MANAGEMENT: "AdminManagementScreen",
+  BRANCH_ADMIN: "BranchAdminScreen",
+  VERIFICATION_OFFICER: "VerificationOfficerScreen",
+  DOCUMENT_OFFICER: "DocumentOfficerScreen",
 };
 
 // ─── Toast / Alert Durations ──────────────────────────────────────────────────
