@@ -1,44 +1,42 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  RefreshControl,
+  View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, SafeAreaView, RefreshControl,
 } from "react-native";
-import { useAuth } from "../../context/AuthContext";
-import { useStudent } from "../../context/StudentContext";
-import useDocuments from "../../hooks/useDocuments";
-import StatusBadge from "../../components/common/StatusBadge";
-import Modal from "../../components/common/Modal";
-import Input from "../../components/common/Input";
-import Button from "../../components/common/Button";
-import DocumentUploader from "../../components/student/DocumentUploader";
-import { SCREENS } from "../../constants/config";
-import studentService from "../../services/studentService";
+import { useAuth }        from "../../context/AuthContext";
+import { useStudent }     from "../../context/StudentContext";
+import useDocuments       from "../../hooks/useDocuments";
+import StatusBadge        from "../../components/common/StatusBadge";
+import Modal              from "../../components/common/Modal";
+import Input              from "../../components/common/Input";
+import Button             from "../../components/common/Button";
+import DocumentUploader   from "../../components/student/DocumentUploader";
+import { SCREENS }        from "../../constants/config";
+import studentService     from "../../services/studentService";
+
+const INTER_MEDIUM_OPTIONS = ["Telugu Medium", "English Medium", "Urdu Medium", "Hindi Medium"];
+const TENTH_MEDIUM_OPTIONS  = ["Telugu Medium", "English Medium", "Urdu Medium", "Hindi Medium"];
 
 const StudentDashboard = ({ navigation }) => {
-  const { user } = useAuth();
-  const { profile, setProfile, documentStats } = useStudent();
-  const { documents, fetchDocuments, uploadDocument, isLoading } =
-    useDocuments();
-  const [refreshing, setRefreshing] = useState(false);
+  const { user }                                             = useAuth();
+  const { profile, setProfile, documentStats }              = useStudent();
+  const { documents, fetchDocuments, uploadDocument }       = useDocuments();
+  const [refreshing, setRefreshing]                         = useState(false);
 
-  // Separate modals for each section
-  const [studentModal, setStudentModal] = useState(false);
-  const [schoolModal, setSchoolModal] = useState(false);
-  const [interModal, setInterModal] = useState(false);
-  const [parentModal, setParentModal] = useState(false);
-  const [emacetModal, setEmacetModal] = useState(false);
-  const [generalModal, setGeneralModal] = useState(false);
-  const [sportsModal, setSportsModal] = useState(false);
-  const [placementModal, setPlacementModal] = useState(false);
+  // ── Modals ────────────────────────────────────────────────────────────────
+  const [studentModal,   setStudentModal]   = useState(false);
+  const [tenthModal,     setTenthModal]     = useState(false);
+  const [interModal,     setInterModal]     = useState(false);
+  const [eapcetModal,    setEapcetModal]    = useState(false);
+  const [parentModal,    setParentModal]    = useState(false);
+  const [generalModal,   setGeneralModal]   = useState(false);
+  const [sportsModal,    setSportsModal]    = useState(false);
+  const [careerModal,    setCareerModal]    = useState(false);
   const [docUploadModal, setDocUploadModal] = useState(false);
+
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [saving, setSaving] = useState(false);
+  const [editForm,    setEditForm]    = useState({});
+  const [saving,      setSaving]      = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -49,9 +47,7 @@ const StudentDashboard = ({ navigation }) => {
     try {
       const data = await studentService.getProfile();
       setProfile(data);
-    } catch (e) {
-      console.log("Error loading profile:", e);
-    }
+    } catch (e) { console.log("Error loading profile:", e); }
   };
 
   const onRefresh = async () => {
@@ -64,23 +60,32 @@ const StudentDashboard = ({ navigation }) => {
   const student = profile || user || {};
 
   const pendingDocs = documents.filter(
-    (d) => d.status === "not_uploaded" || d.status === "rejected",
+    (d) => d.status === "not_uploaded" || d.status === "rejected"
   );
 
   const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
     return "Good Evening";
   };
 
-  // Separate edit handlers for each section
+  // ── Save helper ───────────────────────────────────────────────────────────
+  const saveSection = async (closeFn) => {
+    setSaving(true);
+    try {
+      await studentService.updateProfile(editForm);
+      setProfile({ ...profile, ...editForm });
+      closeFn(false);
+    } catch (e) { console.log("Error saving:", e); }
+    finally { setSaving(false); }
+  };
+
+  // ── Open edit handlers ────────────────────────────────────────────────────
   const openStudentEdit = () => {
     setEditForm({
-      firstName: student.firstName || "",
-      lastName: student.lastName || "",
-      email: student.email || "",
-      phone: student.phone || "",
+      firstName: student.firstName || "", lastName: student.lastName || "",
+      email: student.email || "", phone: student.phone || "",
       address: student.address || "",
       hostelType: student.hostelType || null,
       transportType: student.transportType || "",
@@ -88,193 +93,83 @@ const StudentDashboard = ({ navigation }) => {
     setStudentModal(true);
   };
 
-  const openSchoolEdit = () => {
+  const openTenthEdit = () => {
     setEditForm({
-      schoolName: student.schoolName || "",
+      tenthHallTicket: student.tenthHallTicket || "",
       tenthPercentage: student.tenthPercentage || "",
+      tenthMedium:     student.tenthMedium     || "",
     });
-    setSchoolModal(true);
+    setTenthModal(true);
   };
 
   const openInterEdit = () => {
     setEditForm({
-      interCollege: student.interCollege || "",
-      interHallticket: student.interHallticket || "",
+      interHallTicket: student.interHallTicket || "",
       interPercentage: student.interPercentage || "",
+      interMedium:     student.interMedium     || "",
     });
     setInterModal(true);
   };
 
+  const openEapcetEdit = () => {
+    setEditForm({
+      eapcetHallTicket: student.eapcetHallTicket || "",
+      eapcetRank:       student.eapcetRank       || "",
+    });
+    setEapcetModal(true);
+  };
+
   const openParentEdit = () => {
     setEditForm({
-      fatherName: student.fatherName || "",
-      fatherPhone: student.fatherPhone || "",
+      fatherName:       student.fatherName       || "",
+      fatherPhone:      student.fatherPhone      || "",
       fatherProfession: student.fatherProfession || "",
-      motherName: student.motherName || "",
-      motherPhone: student.motherPhone || "",
+      motherName:       student.motherName       || "",
+      motherPhone:      student.motherPhone      || "",
       motherProfession: student.motherProfession || "",
     });
     setParentModal(true);
   };
 
-  const openEmacetEdit = () => {
-    setEditForm({
-      emacetHallTicket: student.emacetHallTicket || "",
-      emacetRank: student.emacetRank || "",
-      higherStudiesInterest: student.higherStudiesInterest || null,
-      higherStudiesCountry: student.higherStudiesCountry || "",
-      higherStudiesCountryDetail: student.higherStudiesCountryDetail || "",
-      higherStudiesProgram: student.higherStudiesProgram || "",
-    });
-    setEmacetModal(true);
-  };
-
   const openGeneral = () => {
     setEditForm({
-      hobbies: student.hobbies || "",
-      skillsValues: student.skillsValues || "",
+      hobbies:       student.hobbies       || "",
+      skillsValues:  student.skillsValues  || "",
       goalsShortTerm: student.goalsShortTerm || "",
-      goalsLongTerm: student.goalsLongTerm || "",
-      booksNewspaper: student.booksNewspaper || "",
+      goalsLongTerm:  student.goalsLongTerm  || "",
     });
     setGeneralModal(true);
   };
 
   const openSports = () => {
     setEditForm({
-      sportName: student.sportName || "",
-      sportRole: student.sportRole || "",
+      sportName:     student.sportName     || "",
+      sportRole:     student.sportRole     || "",
       tournamentWon: student.tournamentWon || "",
       sportPosition: student.sportPosition || "",
     });
     setSportsModal(true);
   };
 
-  const handleStudentSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setStudentModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSchoolSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setSchoolModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleInterSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setInterModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleParentSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setParentModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEmacetSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setEmacetModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleGeneralSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setGeneralModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSportsSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setSportsModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const openPlacement = () => {
+  const openCareer = () => {
     setEditForm({
-      placementDomain: student.placementDomain || "",
+      careerInterest:             student.careerInterest             || "placement",
+      placementDomain:            student.placementDomain            || "",
+      higherStudiesCountry:       student.higherStudiesCountry       || "india",
+      higherStudiesCountryDetail: student.higherStudiesCountryDetail || "",
+      higherStudiesDegree:        student.higherStudiesDegree        || "",
+      higherStudiesSector:        student.higherStudiesSector        || "",
     });
-    setPlacementModal(true);
+    setCareerModal(true);
   };
 
-  const handlePlacementSave = async () => {
-    setSaving(true);
-    try {
-      await studentService.updateProfile(editForm);
-      setProfile({ ...profile, ...editForm });
-      setPlacementModal(false);
-    } catch (e) {
-      console.log("Error saving:", e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const getDocStatus = (docId) => {
-    const doc = documents.find((d) => d.id === docId);
-    return doc?.status || "not_uploaded";
-  };
-
-  const getDocFileUri = (docId) => {
-    const doc = documents.find((d) => d.id === docId);
-    return doc?.fileUri || null;
-  };
+  // ── Document helpers ──────────────────────────────────────────────────────
+  const getDocStatus  = (docId) => documents.find((d) => d.id === docId)?.status  || "not_uploaded";
+  const getDocFileUri = (docId) => documents.find((d) => d.id === docId)?.fileUri || null;
 
   const handleDocUploadPress = (docId, docTitle) => {
-    const existingDoc = documents.find((d) => d.id === docId);
-    const doc = existingDoc || { id: docId, title: docTitle };
-    setSelectedDoc(doc);
+    const existing = documents.find((d) => d.id === docId);
+    setSelectedDoc(existing || { id: docId, title: docTitle });
     setDocUploadModal(true);
   };
 
@@ -288,64 +183,66 @@ const StudentDashboard = ({ navigation }) => {
   };
 
   const renderDocUpload = (docId, docTitle) => {
-    const doc = documents.find((d) => d.id === docId);
-    const status = doc?.status || "not_uploaded";
+    const status     = getDocStatus(docId);
     const isUploaded = status === "pending" || status === "approved";
+    const icon = status === "approved" ? "✅" : status === "pending" ? "⏳" : status === "rejected" ? "❌" : "📄";
+    const label = status === "approved" ? "Approved" : status === "pending" ? "Under Review" : status === "rejected" ? "Rejected — Tap to re-upload" : "Tap to upload";
 
     return (
       <TouchableOpacity
-        style={[
-          styles.docUploadItem,
-          isUploaded && styles.docUploadItemUploaded,
-        ]}
+        key={docId}
+        style={[styles.docUploadItem, isUploaded && styles.docUploadItemUploaded]}
         onPress={() => handleDocUploadPress(docId, docTitle)}
       >
+        <Text style={styles.docUploadIcon}>{icon}</Text>
         <View style={styles.docUploadInfo}>
-          <Text style={styles.docUploadIcon}>
-            {status === "approved"
-              ? "✅"
-              : status === "pending"
-                ? "⏳"
-                : status === "rejected"
-                  ? "❌"
-                  : "📄"}
+          <Text style={styles.docUploadTitle}>{docTitle}</Text>
+          <Text style={[styles.docUploadStatus, status === "approved" && styles.statusApproved, status === "rejected" && styles.statusRejected]}>
+            {label}
           </Text>
-          <View>
-            <Text style={styles.docUploadTitle}>{docTitle}</Text>
-            <Text
-              style={[
-                styles.docUploadStatus,
-                status === "approved" && styles.docUploadStatusApproved,
-              ]}
-            >
-              {status === "approved"
-                ? "Approved"
-                : status === "pending"
-                  ? "Pending"
-                  : status === "rejected"
-                    ? "Rejected - Tap to re-upload"
-                    : "Tap to upload"}
-            </Text>
-          </View>
         </View>
+        <Text style={styles.docArrow}>›</Text>
       </TouchableOpacity>
     );
   };
 
-  // Render the UI cards
+  // ── Option pill selector ──────────────────────────────────────────────────
+  const OptionPills = ({ field, options }) => (
+    <View style={styles.pillRow}>
+      {options.map((opt) => (
+        <TouchableOpacity
+          key={opt}
+          style={[styles.pill, editForm[field] === opt && styles.pillActive]}
+          onPress={() => setEditForm({ ...editForm, [field]: opt })}
+        >
+          <Text style={[styles.pillText, editForm[field] === opt && styles.pillTextActive]}>{opt}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  // ── Detail row helpers ────────────────────────────────────────────────────
+  const DetailRow = ({ label, value }) => (
+    <View style={styles.detailItem}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value || "—"}</Text>
+    </View>
+  );
+  const DetailRowFull = ({ label, value }) => (
+    <View style={styles.detailItemFull}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value || "—"}</Text>
+    </View>
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#1D4ED8"]}
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#1D4ED8"]} />}
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.greeting}>{getGreeting()} 👋</Text>
@@ -354,982 +251,370 @@ const StudentDashboard = ({ navigation }) => {
             </Text>
             <Text style={styles.rollNumber}>{student.uniqueId || ""}</Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.avatarBtn}
-            onPress={() => navigation.navigate(SCREENS.PROFILE)}
-          >
+          <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate(SCREENS.PROFILE)}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {(student.firstName || student.name || "S")
-                  .charAt(0)
-                  .toUpperCase()}
+                {(student.firstName || student.name || "S").charAt(0).toUpperCase()}
               </Text>
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Documents Section */}
+        {/* ── Document Stats ── */}
         <View style={styles.docStatusCard}>
           <View style={styles.docStatusHeader}>
-            <Text style={styles.docStatusTitle}>📚 Documents</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate(SCREENS.DOCUMENT_UPLOAD)}
-            >
-              <Text style={styles.uploadLink}>Upload</Text>
+            <Text style={styles.docStatusTitle}>📚 Academic Documents</Text>
+            <TouchableOpacity onPress={() => navigation.navigate(SCREENS.DOCUMENT_UPLOAD)}>
+              <Text style={styles.uploadLink}>View All</Text>
             </TouchableOpacity>
           </View>
-
           <View style={styles.statsRow}>
             {[
-              { label: "Total", value: documentStats.total, color: "#1D4ED8" },
-              {
-                label: "Approved",
-                value: documentStats.approved,
-                color: "#15803D",
-              },
-              {
-                label: "Pending",
-                value: documentStats.pending,
-                color: "#C2410C",
-              },
-              {
-                label: "Rejected",
-                value: documentStats.rejected,
-                color: "#BE123C",
-              },
+              { label: "Total",    value: documentStats.total,    color: "#1D4ED8" },
+              { label: "Approved", value: documentStats.approved, color: "#15803D" },
+              { label: "Pending",  value: documentStats.pending,  color: "#C2410C" },
+              { label: "Rejected", value: documentStats.rejected, color: "#BE123C" },
             ].map((stat) => (
-              <View
-                key={stat.label}
-                style={[styles.statChip, { borderColor: stat.color }]}
-              >
-                <Text style={[styles.statValue, { color: stat.color }]}>
-                  {stat.value}
-                </Text>
+              <View key={stat.label} style={[styles.statChip, { borderColor: stat.color }]}>
+                <Text style={[styles.statValue, { color: stat.color }]}>{stat.value}</Text>
                 <Text style={styles.statLabel}>{stat.label}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Attention required */}
+        {/* ── Action Required ── */}
         {pendingDocs.length > 0 && (
           <View style={styles.attentionSection}>
             <Text style={styles.attentionTitle}>⚠️ Action Required</Text>
-            <View style={styles.attentionList}>
-              {pendingDocs.slice(0, 4).map((doc) => (
-                <TouchableOpacity
-                  key={doc.id}
-                  style={styles.attentionCard}
-                  onPress={() =>
-                    navigation.navigate(SCREENS.DOCUMENT_DETAIL, {
-                      document: doc,
-                    })
-                  }
-                >
-                  <Text style={styles.attentionDocIcon}>
-                    {doc.status === "rejected" ? "❌" : "📤"}
+            {pendingDocs.slice(0, 4).map((doc) => (
+              <TouchableOpacity
+                key={doc.id}
+                style={styles.attentionCard}
+                onPress={() => navigation.navigate(SCREENS.DOCUMENT_DETAIL, { document: doc })}
+              >
+                <Text style={styles.attentionDocIcon}>{doc.status === "rejected" ? "❌" : "📤"}</Text>
+                <View style={styles.attentionInfo}>
+                  <Text style={styles.attentionTitleText}>{doc.title}</Text>
+                  <Text style={styles.attentionStatus}>
+                    {doc.status === "rejected" ? "Rejected — Re-upload required" : "Not uploaded yet"}
                   </Text>
-                  <View style={styles.attentionInfo}>
-                    <Text style={styles.attentionTitleText}>{doc.title}</Text>
-                    <Text style={styles.attentionStatus}>
-                      {doc.status === "rejected"
-                        ? "Rejected — Re-upload"
-                        : "Not uploaded"}
-                    </Text>
-                  </View>
-                  <Text style={styles.attentionArrow}>›</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={styles.viewAllBtn}
-              onPress={() => navigation.navigate(SCREENS.DOCUMENT_UPLOAD)}
-            >
+                </View>
+                <Text style={styles.attentionArrow}>›</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate(SCREENS.DOCUMENT_UPLOAD)}>
               <Text style={styles.viewAllText}>View All Documents →</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Student Details Card */}
+        {/* ── Student Details ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Student Details</Text>
-            <TouchableOpacity onPress={openStudentEdit}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
+            <Text style={styles.cardTitle}>👤 Student Details</Text>
+            <TouchableOpacity onPress={openStudentEdit}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
           </View>
-
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Name</Text>
-              <Text style={styles.detailValue}>
-                {student.firstName} {student.lastName}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Email</Text>
-              <Text style={styles.detailValue}>{student.email || "-"}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Phone</Text>
-              <Text style={styles.detailValue}>{student.phone || "-"}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Hostel/Day Scholar</Text>
-              <Text style={styles.detailValue}>
-                {student.hostelType === "hostel"
-                  ? "🏠 Hostel"
-                  : student.hostelType === "dayscholar"
-                    ? `🚏 ${student.transportType || "Day Scholar"}`
-                    : "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItemFull}>
-              <Text style={styles.detailLabel}>Address</Text>
-              <Text style={styles.detailValue}>{student.address || "-"}</Text>
-            </View>
+            <DetailRow label="First Name"  value={student.firstName} />
+            <DetailRow label="Last Name"   value={student.lastName}  />
+            <DetailRow label="Email"       value={student.email}     />
+            <DetailRow label="Phone"       value={student.phone}     />
+            <DetailRow
+              label="Stay Type"
+              value={student.hostelType === "hostel" ? "🏠 Hostel" : student.hostelType === "dayscholar" ? `🚏 ${student.transportType || "Day Scholar"}` : undefined}
+            />
           </View>
-
-          <Text style={styles.docSectionTitle}>Student Documents</Text>
+          <DetailRowFull label="Address" value={student.address} />
+          <Text style={styles.docSectionTitle}>Documents</Text>
           {renderDocUpload("passport_photo", "Passport Size Photo")}
+          {renderDocUpload("aadhar_card",    "Aadhaar Card")}
         </View>
 
-        {/* School Details Card */}
+        {/* ── 10th Documentation ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>School Details</Text>
-            <TouchableOpacity onPress={openSchoolEdit}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
+            <Text style={styles.cardTitle}>🏫 10th Documentation</Text>
+            <TouchableOpacity onPress={openTenthEdit}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
           </View>
-
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>School Name</Text>
-              <Text style={styles.detailValue}>
-                {student.schoolName || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>10th %</Text>
-              <Text style={styles.detailValue}>
-                {student.tenthPercentage ? `${student.tenthPercentage}%` : "-"}
-              </Text>
-            </View>
+            <DetailRow label="Hall Ticket No." value={student.tenthHallTicket} />
+            <DetailRow label="Percentage"      value={student.tenthPercentage ? `${student.tenthPercentage}%` : undefined} />
+            <DetailRow label="Medium"          value={student.tenthMedium}     />
           </View>
-
-          <Text style={styles.docSectionTitle}>School Documents</Text>
-          {renderDocUpload("tenth_memo", "10th Memo")}
-          {renderDocUpload("school_bonafide", "School Bonafide")}
+          <Text style={styles.docSectionTitle}>Upload Documents</Text>
+          {renderDocUpload("tenth_hall_ticket", "10th Hall Ticket")}
+          {renderDocUpload("tenth_memo",        "10th Memo")}
+          {renderDocUpload("tenth_bonafide",    "10th Bonafide Certificate")}
         </View>
 
-        {/* Inter Details Card */}
+        {/* ── Inter Documentation ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Inter Details</Text>
-            <TouchableOpacity onPress={openInterEdit}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
+            <Text style={styles.cardTitle}>🎓 Inter Documentation</Text>
+            <TouchableOpacity onPress={openInterEdit}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
           </View>
-
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Inter College</Text>
-              <Text style={styles.detailValue}>
-                {student.interCollege || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Inter Hallticket</Text>
-              <Text style={styles.detailValue}>
-                {student.interHallticket || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItemFull}>
-              <Text style={styles.detailLabel}>Inter Marks (%)</Text>
-              <Text style={styles.detailValue}>
-                {student.interPercentage ? `${student.interPercentage}%` : "-"}
-              </Text>
-            </View>
+            <DetailRow label="Hall Ticket No." value={student.interHallTicket} />
+            <DetailRow label="Percentage"      value={student.interPercentage ? `${student.interPercentage}%` : undefined} />
+            <DetailRow label="Medium"          value={student.interMedium}     />
           </View>
-
-          <Text style={styles.docSectionTitle}>Inter Documents</Text>
+          <Text style={styles.docSectionTitle}>Upload Documents</Text>
           {renderDocUpload("inter_hall_ticket", "Inter Hall Ticket")}
-          {renderDocUpload("inter_memo", "Inter Memo")}
-          {renderDocUpload("inter_bonafide", "Inter Bonafide")}
+          {renderDocUpload("inter_memo",        "Inter Memo")}
+          {renderDocUpload("inter_bonafide",    "Inter Bonafide Certificate")}
         </View>
 
-        {/* Parent Details Card */}
+        {/* ── EAPCET Documentation ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Parent Details</Text>
-            <TouchableOpacity onPress={openParentEdit}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
+            <Text style={styles.cardTitle}>📝 EAPCET Documentation</Text>
+            <TouchableOpacity onPress={openEapcetEdit}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
           </View>
-
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Father's Name</Text>
-              <Text style={styles.detailValue}>
-                {student.fatherName || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Father's Phone</Text>
-              <Text style={styles.detailValue}>
-                {student.fatherPhone || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Father's Profession</Text>
-              <Text style={styles.detailValue}>
-                {student.fatherProfession || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Mother's Name</Text>
-              <Text style={styles.detailValue}>
-                {student.motherName || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Mother's Phone</Text>
-              <Text style={styles.detailValue}>
-                {student.motherPhone || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Mother's Profession</Text>
-              <Text style={styles.detailValue}>
-                {student.motherProfession || "-"}
-              </Text>
-            </View>
+            <DetailRow label="Hall Ticket No." value={student.eapcetHallTicket} />
+            <DetailRow label="Rank"            value={student.eapcetRank}        />
           </View>
-
-          <Text style={styles.docSectionTitle}>Parent Documents</Text>
-          {renderDocUpload("aadhar_card", "Aadhaar Card")}
+          <Text style={styles.docSectionTitle}>Upload Documents</Text>
+          {renderDocUpload("eapcet_hall_ticket", "EAPCET Hall Ticket")}
+          {renderDocUpload("eapcet_rank_card",   "EAPCET Rank Card")}
         </View>
 
-        {/* EMACET Details Card */}
+        {/* ── Parent Details ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>EMACET Details</Text>
-            <TouchableOpacity onPress={openEmacetEdit}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
+            <Text style={styles.cardTitle}>👨‍👩‍👦 Parent Details</Text>
+            <TouchableOpacity onPress={openParentEdit}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
           </View>
-
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Hall Ticket No.</Text>
-              <Text style={styles.detailValue}>
-                {student.emacetHallTicket || "-"}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Rank</Text>
-              <Text style={styles.detailValue}>
-                {student.emacetRank || "-"}
-              </Text>
-            </View>
+            <DetailRow label="Father's Name"       value={student.fatherName}       />
+            <DetailRow label="Father's Phone"      value={student.fatherPhone}      />
+            <DetailRow label="Father's Profession" value={student.fatherProfession} />
+            <DetailRow label="Mother's Name"       value={student.motherName}       />
+            <DetailRow label="Mother's Phone"      value={student.motherPhone}      />
+            <DetailRow label="Mother's Profession" value={student.motherProfession} />
           </View>
-
-          <Text style={styles.docSectionTitle}>EMACET Documents</Text>
-          {renderDocUpload("emacet_rank_card", "EMACET Rank Card")}
-          {renderDocUpload("emacet_hall_ticket", "EMACET Hall Ticket")}
         </View>
 
-        {/* Caste Certificate Card */}
+        {/* ── Other Documents ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Caste Certificate</Text>
+            <Text style={styles.cardTitle}>📂 Other Documents</Text>
           </View>
-          <Text style={styles.docSectionTitle}>Upload Document</Text>
-          {renderDocUpload("caste_certificate", "Caste Certificate")}
-        </View>
-
-        {/* Income Certificate Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Income Certificate</Text>
-          </View>
-          <Text style={styles.docSectionTitle}>Upload Document</Text>
+          {renderDocUpload("caste_certificate",  "Caste Certificate")}
           {renderDocUpload("income_certificate", "Income Certificate")}
         </View>
 
-        {/* Higher Studies Card */}
+        {/* ── General Info ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Higher Studies Interest</Text>
+            <Text style={styles.cardTitle}>💡 General Info</Text>
+            <TouchableOpacity onPress={openGeneral}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
           </View>
+          <Text style={styles.subSectionTitle}>Student Interest</Text>
+          <DetailRowFull label="Hobbies"         value={student.hobbies}        />
+          <DetailRowFull label="Skills & Values" value={student.skillsValues}   />
+          <DetailRowFull label="Short Term Goals" value={student.goalsShortTerm} />
+          <DetailRowFull label="Long Term Goals"  value={student.goalsLongTerm}  />
+        </View>
 
-          <View style={styles.higherStudiesBox}>
-            {student.higherStudiesInterest === "yes" ? (
-              <>
-                <View style={styles.interestTag}>
-                  <Text style={styles.interestTagText}>✅ Interested</Text>
-                </View>
-                <Text style={styles.interestDetail}>
-                  {student.higherStudiesCountry === "abroad"
-                    ? `🌍 Abroad - ${student.higherStudiesCountryDetail || "Not specified"}`
-                    : "🇮🇳 India"}
-                </Text>
-                {student.higherStudiesProgram && (
-                  <Text style={styles.interestDetail}>
-                    Program: {student.higherStudiesProgram}
-                  </Text>
-                )}
-              </>
-            ) : student.higherStudiesInterest === "no" ? (
-              <View style={styles.interestTag}>
-                <Text style={styles.interestTagText}>❌ Not Interested</Text>
+        {/* ── Sports ── */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>🏅 Sports (Professional)</Text>
+            <TouchableOpacity onPress={openSports}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
+          </View>
+          <View style={styles.detailsGrid}>
+            <DetailRow label="Sport Name"     value={student.sportName}     />
+            <DetailRow label="Role in Sports" value={student.sportRole}     />
+            <DetailRow label="Position"       value={student.sportPosition} />
+          </View>
+          <DetailRowFull label="Tournaments Won" value={student.tournamentWon} />
+        </View>
+
+        {/* ── Career Interest ── */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>💼 Career Interest</Text>
+            <TouchableOpacity onPress={openCareer}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
+          </View>
+          {student.careerInterest === "placement" ? (
+            <>
+              <View style={styles.careerTag}>
+                <Text style={styles.careerTagText}>🏢 Placements</Text>
               </View>
-            ) : (
-              <Text style={styles.notSet}>Not updated yet</Text>
-            )}
-          </View>
-        </View>
-
-        {/* General Details Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>General Info</Text>
-            <TouchableOpacity onPress={openGeneral}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Hobbies</Text>
-            <Text style={styles.detailValue}>{student.hobbies || "-"}</Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Skills & Values</Text>
-            <Text style={styles.detailValue}>
-              {student.skillsValues || "-"}
-            </Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Short Term Goals</Text>
-            <Text style={styles.detailValue}>
-              {student.goalsShortTerm || "-"}
-            </Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Long Term Goals</Text>
-            <Text style={styles.detailValue}>
-              {student.goalsLongTerm || "-"}
-            </Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Books & Newspaper</Text>
-            <Text style={styles.detailValue}>
-              {student.booksNewspaper || "-"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Placement Details Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Placement</Text>
-            <TouchableOpacity onPress={openPlacement}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Domain Interest</Text>
-            <Text style={styles.detailValue}>
-              {student.placementDomain || "-"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Sports Details Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Sports</Text>
-            <TouchableOpacity onPress={openSports}>
-              <Text style={styles.editLink}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Sport Name</Text>
-            <Text style={styles.detailValue}>{student.sportName || "-"}</Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Role in Sports</Text>
-            <Text style={styles.detailValue}>{student.sportRole || "-"}</Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Tournament Won</Text>
-            <Text style={styles.detailValue}>
-              {student.tournamentWon || "-"}
-            </Text>
-          </View>
-          <View style={styles.detailItemFull}>
-            <Text style={styles.detailLabel}>Position</Text>
-            <Text style={styles.detailValue}>
-              {student.sportPosition || "-"}
-            </Text>
-          </View>
+              <DetailRowFull label="Domain of Interest" value={student.placementDomain} />
+            </>
+          ) : student.careerInterest === "higher_education" ? (
+            <>
+              <View style={[styles.careerTag, { backgroundColor: "#F0FDF4" }]}>
+                <Text style={[styles.careerTagText, { color: "#16A34A" }]}>🎓 Higher Education</Text>
+              </View>
+              <View style={styles.detailsGrid}>
+                <DetailRow
+                  label="Location"
+                  value={student.higherStudiesCountry === "abroad"
+                    ? `🌍 Abroad — ${student.higherStudiesCountryDetail || ""}`
+                    : "🇮🇳 India"}
+                />
+                <DetailRow label="Degree Aspired" value={student.higherStudiesDegree}  />
+                <DetailRow label="Sector"         value={student.higherStudiesSector}  />
+              </View>
+            </>
+          ) : (
+            <Text style={styles.notSet}>Not updated yet</Text>
+          )}
         </View>
 
         <View style={{ height: 30 }} />
       </ScrollView>
 
-      {/* Student Details Edit Modal */}
-      <Modal
-        visible={studentModal}
-        onClose={() => setStudentModal(false)}
-        title="Edit Student Details"
-        size="lg"
-      >
+      {/* ══════════════════════════ EDIT MODALS ══════════════════════════════ */}
+
+      {/* Student Details Modal */}
+      <Modal visible={studentModal} onClose={() => setStudentModal(false)} title="Edit Student Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="First Name"
-            value={editForm.firstName}
-            onChangeText={(t) => setEditForm({ ...editForm, firstName: t })}
-            placeholder="First name"
-          />
-          <Input
-            label="Last Name"
-            value={editForm.lastName}
-            onChangeText={(t) => setEditForm({ ...editForm, lastName: t })}
-            placeholder="Last name"
-          />
-          <Input
-            label="Email"
-            value={editForm.email}
-            onChangeText={(t) => setEditForm({ ...editForm, email: t })}
-            placeholder="Email"
-            keyboardType="email-address"
-          />
-          <Input
-            label="Phone"
-            value={editForm.phone}
-            onChangeText={(t) => setEditForm({ ...editForm, phone: t })}
-            placeholder="Phone"
-            keyboardType="phone-pad"
-          />
-          <Input
-            label="Address"
-            value={editForm.address}
-            onChangeText={(t) => setEditForm({ ...editForm, address: t })}
-            placeholder="Address"
-            multiline
-          />
-          <Text style={styles.subLabel}>Hostel / Transport</Text>
-          <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                editForm.hostelType === "hostel" && styles.toggleBtnActive,
-              ]}
-              onPress={() => setEditForm({ ...editForm, hostelType: "hostel" })}
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  editForm.hostelType === "hostel" && styles.toggleTextActive,
-                ]}
-              >
-                🏠 Hostel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                editForm.hostelType === "dayscholar" && styles.toggleBtnActive,
-              ]}
-              onPress={() =>
-                setEditForm({ ...editForm, hostelType: "dayscholar" })
-              }
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  editForm.hostelType === "dayscholar" &&
-                    styles.toggleTextActive,
-                ]}
-              >
-                🚏 Day Scholar
-              </Text>
-            </TouchableOpacity>
+          <Input label="First Name" value={editForm.firstName} onChangeText={(t) => setEditForm({ ...editForm, firstName: t })} placeholder="First name" />
+          <Input label="Last Name"  value={editForm.lastName}  onChangeText={(t) => setEditForm({ ...editForm, lastName: t })}  placeholder="Last name"  />
+          <Input label="Email"      value={editForm.email}     onChangeText={(t) => setEditForm({ ...editForm, email: t })}     placeholder="Email" keyboardType="email-address" />
+          <Input label="Phone"      value={editForm.phone}     onChangeText={(t) => setEditForm({ ...editForm, phone: t })}     placeholder="Phone" keyboardType="phone-pad" />
+          <Input label="Address"    value={editForm.address}   onChangeText={(t) => setEditForm({ ...editForm, address: t })}   placeholder="Address" multiline />
+          <Text style={styles.modalSectionLabel}>Stay Type</Text>
+          <View style={styles.pillRow}>
+            {[{ val: "hostel", label: "🏠 Hostel" }, { val: "dayscholar", label: "🚏 Day Scholar" }].map((o) => (
+              <TouchableOpacity key={o.val} style={[styles.pill, editForm.hostelType === o.val && styles.pillActive]} onPress={() => setEditForm({ ...editForm, hostelType: o.val })}>
+                <Text style={[styles.pillText, editForm.hostelType === o.val && styles.pillTextActive]}>{o.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
           {editForm.hostelType === "dayscholar" && (
-            <View style={styles.toggleRow}>
-              <TouchableOpacity
-                style={[
-                  styles.toggleBtn,
-                  editForm.transportType === "college-bus" &&
-                    styles.toggleBtnActive,
-                ]}
-                onPress={() =>
-                  setEditForm({ ...editForm, transportType: "college-bus" })
-                }
-              >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    editForm.transportType === "college-bus" &&
-                      styles.toggleTextActive,
-                  ]}
-                >
-                  College Bus
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.toggleBtn,
-                  editForm.transportType === "rtc" && styles.toggleBtnActive,
-                ]}
-                onPress={() =>
-                  setEditForm({ ...editForm, transportType: "rtc" })
-                }
-              >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    editForm.transportType === "rtc" && styles.toggleTextActive,
-                  ]}
-                >
-                  RTC
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleStudentSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
-        </ScrollView>
-      </Modal>
-
-      {/* School Details Edit Modal */}
-      <Modal
-        visible={schoolModal}
-        onClose={() => setSchoolModal(false)}
-        title="Edit School Details"
-        size="lg"
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="School Name"
-            value={editForm.schoolName}
-            onChangeText={(t) => setEditForm({ ...editForm, schoolName: t })}
-            placeholder="e.g., Narayana High School"
-          />
-          <Input
-            label="10th Percentage"
-            value={editForm.tenthPercentage}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, tenthPercentage: t })
-            }
-            placeholder="e.g., 95.5"
-            keyboardType="numeric"
-          />
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleSchoolSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
-        </ScrollView>
-      </Modal>
-
-      {/* Inter Details Edit Modal */}
-      <Modal
-        visible={interModal}
-        onClose={() => setInterModal(false)}
-        title="Edit Inter Details"
-        size="lg"
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="Inter College"
-            value={editForm.interCollege}
-            onChangeText={(t) => setEditForm({ ...editForm, interCollege: t })}
-            placeholder="e.g., Narayana Junior College"
-          />
-          <Input
-            label="Inter Hallticket"
-            value={editForm.interHallticket}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, interHallticket: t })
-            }
-            placeholder="e.g., IHT123456"
-            autoCapitalize="characters"
-          />
-          <Input
-            label="Inter Marks (%)"
-            value={editForm.interPercentage}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, interPercentage: t })
-            }
-            placeholder="e.g., 96.0"
-            keyboardType="numeric"
-          />
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleInterSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
-        </ScrollView>
-      </Modal>
-
-      {/* Parent Details Edit Modal */}
-      <Modal
-        visible={parentModal}
-        onClose={() => setParentModal(false)}
-        title="Edit Parent Details"
-        size="lg"
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="Father's Name"
-            value={editForm.fatherName}
-            onChangeText={(t) => setEditForm({ ...editForm, fatherName: t })}
-            placeholder="Father's name"
-          />
-          <Input
-            label="Father's Phone"
-            value={editForm.fatherPhone}
-            onChangeText={(t) => setEditForm({ ...editForm, fatherPhone: t })}
-            placeholder="Father's phone"
-            keyboardType="phone-pad"
-          />
-          <Input
-            label="Father's Profession"
-            value={editForm.fatherProfession}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, fatherProfession: t })
-            }
-            placeholder="e.g., Farmer, Teacher, Business"
-          />
-          <Input
-            label="Mother's Name"
-            value={editForm.motherName}
-            onChangeText={(t) => setEditForm({ ...editForm, motherName: t })}
-            placeholder="Mother's name"
-          />
-          <Input
-            label="Mother's Phone"
-            value={editForm.motherPhone}
-            onChangeText={(t) => setEditForm({ ...editForm, motherPhone: t })}
-            placeholder="Mother's phone"
-            keyboardType="phone-pad"
-          />
-          <Input
-            label="Mother's Profession"
-            value={editForm.motherProfession}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, motherProfession: t })
-            }
-            placeholder="e.g., Housewife, Teacher, Business"
-          />
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleParentSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
-        </ScrollView>
-      </Modal>
-
-      {/* EMACET Details Edit Modal */}
-      <Modal
-        visible={emacetModal}
-        onClose={() => setEmacetModal(false)}
-        title="Edit EMACET Details"
-        size="lg"
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="Hall Ticket"
-            value={editForm.emacetHallTicket}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, emacetHallTicket: t })
-            }
-            placeholder="Hall ticket number"
-          />
-          <Input
-            label="Rank"
-            value={editForm.emacetRank}
-            onChangeText={(t) => setEditForm({ ...editForm, emacetRank: t })}
-            placeholder="Rank"
-            keyboardType="numeric"
-          />
-          <Text style={styles.modalSectionTitle}>Higher Studies</Text>
-          <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                editForm.higherStudiesInterest === "yes" &&
-                  styles.toggleBtnActive,
-              ]}
-              onPress={() =>
-                setEditForm({ ...editForm, higherStudiesInterest: "yes" })
-              }
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  editForm.higherStudiesInterest === "yes" &&
-                    styles.toggleTextActive,
-                ]}
-              >
-                Yes
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                editForm.higherStudiesInterest === "no" &&
-                  styles.toggleBtnActive,
-              ]}
-              onPress={() =>
-                setEditForm({
-                  ...editForm,
-                  higherStudiesInterest: "no",
-                  higherStudiesCountry: "",
-                  higherStudiesCountryDetail: "",
-                  higherStudiesProgram: "",
-                })
-              }
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  editForm.higherStudiesInterest === "no" &&
-                    styles.toggleTextActive,
-                ]}
-              >
-                No
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {editForm.higherStudiesInterest === "yes" && (
             <>
-              <Text style={styles.subLabel}>Where?</Text>
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleBtn,
-                    editForm.higherStudiesCountry === "india" &&
-                      styles.toggleBtnActive,
-                  ]}
-                  onPress={() =>
-                    setEditForm({ ...editForm, higherStudiesCountry: "india" })
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      editForm.higherStudiesCountry === "india" &&
-                        styles.toggleTextActive,
-                    ]}
-                  >
-                    🇮🇳 India
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleBtn,
-                    editForm.higherStudiesCountry === "abroad" &&
-                      styles.toggleBtnActive,
-                  ]}
-                  onPress={() =>
-                    setEditForm({ ...editForm, higherStudiesCountry: "abroad" })
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      editForm.higherStudiesCountry === "abroad" &&
-                        styles.toggleTextActive,
-                    ]}
-                  >
-                    🌍 Abroad
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              {editForm.higherStudiesCountry === "abroad" && (
-                <Input
-                  label="Which Country?"
-                  value={editForm.higherStudiesCountryDetail || ""}
-                  onChangeText={(t) =>
-                    setEditForm({ ...editForm, higherStudiesCountryDetail: t })
-                  }
-                  placeholder="e.g., USA, UK"
-                />
-              )}
-              <Text style={styles.subLabel}>Program?</Text>
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleBtn,
-                    editForm.higherStudiesProgram === "mtech" &&
-                      styles.toggleBtnActive,
-                  ]}
-                  onPress={() =>
-                    setEditForm({ ...editForm, higherStudiesProgram: "mtech" })
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      editForm.higherStudiesProgram === "mtech" &&
-                        styles.toggleTextActive,
-                    ]}
-                  >
-                    MTech
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleBtn,
-                    editForm.higherStudiesProgram === "mba" &&
-                      styles.toggleBtnActive,
-                  ]}
-                  onPress={() =>
-                    setEditForm({ ...editForm, higherStudiesProgram: "mba" })
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      editForm.higherStudiesProgram === "mba" &&
-                        styles.toggleTextActive,
-                    ]}
-                  >
-                    MBA
-                  </Text>
-                </TouchableOpacity>
+              <Text style={styles.modalSectionLabel}>Transport</Text>
+              <View style={styles.pillRow}>
+                {[{ val: "college-bus", label: "College Bus" }, { val: "rtc", label: "RTC" }].map((o) => (
+                  <TouchableOpacity key={o.val} style={[styles.pill, editForm.transportType === o.val && styles.pillActive]} onPress={() => setEditForm({ ...editForm, transportType: o.val })}>
+                    <Text style={[styles.pillText, editForm.transportType === o.val && styles.pillTextActive]}>{o.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </>
           )}
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleEmacetSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setStudentModal)} disabled={saving} style={styles.saveBtn} />
         </ScrollView>
       </Modal>
 
-      {/* General Info Edit Modal */}
-      <Modal
-        visible={generalModal}
-        onClose={() => setGeneralModal(false)}
-        title="General Info"
-        size="lg"
-      >
+      {/* 10th Details Modal */}
+      <Modal visible={tenthModal} onClose={() => setTenthModal(false)} title="Edit 10th Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="Hobbies"
-            value={editForm.hobbies}
-            onChangeText={(t) => setEditForm({ ...editForm, hobbies: t })}
-            placeholder="e.g., Reading, Gaming, Painting"
-            multiline
-          />
-          <Input
-            label="Skills & Values"
-            value={editForm.skillsValues}
-            onChangeText={(t) => setEditForm({ ...editForm, skillsValues: t })}
-            placeholder="e.g., Leadership, Teamwork, Coding"
-            multiline
-          />
-          <Input
-            label="Short Term Goals"
-            value={editForm.goalsShortTerm}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, goalsShortTerm: t })
-            }
-            placeholder="e.g., Learn a new skill, Get internship"
-            multiline
-          />
-          <Input
-            label="Long Term Goals"
-            value={editForm.goalsLongTerm}
-            onChangeText={(t) => setEditForm({ ...editForm, goalsLongTerm: t })}
-            placeholder="e.g., Become a software engineer, Start own business"
-            multiline
-          />
-          <Input
-            label="Books & Newspaper"
-            value={editForm.booksNewspaper}
-            onChangeText={(t) =>
-              setEditForm({ ...editForm, booksNewspaper: t })
-            }
-            placeholder="e.g., The Hindu, Times of India, Novels"
-            multiline
-          />
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleGeneralSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
+          <Input label="Hall Ticket Number" value={editForm.tenthHallTicket} onChangeText={(t) => setEditForm({ ...editForm, tenthHallTicket: t.toUpperCase() })} placeholder="e.g. AP12345678" autoCapitalize="characters" />
+          <Input label="Percentage (%)"     value={editForm.tenthPercentage} onChangeText={(t) => setEditForm({ ...editForm, tenthPercentage: t })}              placeholder="e.g. 95.5"       keyboardType="numeric" />
+          <Text style={styles.modalSectionLabel}>Medium of Instruction</Text>
+          <OptionPills field="tenthMedium" options={TENTH_MEDIUM_OPTIONS} />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setTenthModal)} disabled={saving} style={styles.saveBtn} />
         </ScrollView>
       </Modal>
 
-      {/* Sports Edit Modal */}
-      <Modal
-        visible={sportsModal}
-        onClose={() => setSportsModal(false)}
-        title="Sports Details"
-        size="lg"
-      >
+      {/* Inter Details Modal */}
+      <Modal visible={interModal} onClose={() => setInterModal(false)} title="Edit Inter Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Input
-            label="Sport Name"
-            value={editForm.sportName}
-            onChangeText={(t) => setEditForm({ ...editForm, sportName: t })}
-            placeholder="e.g., Cricket, Basketball, Kabaddi"
-          />
-          <Input
-            label="Role in Sports"
-            value={editForm.sportRole}
-            onChangeText={(t) => setEditForm({ ...editForm, sportRole: t })}
-            placeholder="e.g., Captain, Player, Coach"
-          />
-          <Input
-            label="Tournament Won"
-            value={editForm.tournamentWon}
-            onChangeText={(t) => setEditForm({ ...editForm, tournamentWon: t })}
-            placeholder="e.g., District Level Cricket 2023, State Basketball 2022"
-            multiline
-          />
-          <Input
-            label="Position (1st, 2nd, 3rd)"
-            value={editForm.sportPosition}
-            onChangeText={(t) => setEditForm({ ...editForm, sportPosition: t })}
-            placeholder="e.g., 1st, 2nd, 3rd"
-          />
-          <Button
-            title={saving ? "Saving..." : "Save Changes"}
-            onPress={handleSportsSave}
-            disabled={saving}
-            style={styles.saveBtn}
-          />
+          <Input label="Hall Ticket Number" value={editForm.interHallTicket} onChangeText={(t) => setEditForm({ ...editForm, interHallTicket: t.toUpperCase() })} placeholder="e.g. IHT2024XXXXX" autoCapitalize="characters" />
+          <Input label="Percentage (%)"     value={editForm.interPercentage} onChangeText={(t) => setEditForm({ ...editForm, interPercentage: t })}               placeholder="e.g. 96.0"        keyboardType="numeric" />
+          <Text style={styles.modalSectionLabel}>Medium of Instruction</Text>
+          <OptionPills field="interMedium" options={INTER_MEDIUM_OPTIONS} />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setInterModal)} disabled={saving} style={styles.saveBtn} />
+        </ScrollView>
+      </Modal>
+
+      {/* EAPCET Modal */}
+      <Modal visible={eapcetModal} onClose={() => setEapcetModal(false)} title="Edit EAPCET Details" size="lg">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Input label="Hall Ticket Number" value={editForm.eapcetHallTicket} onChangeText={(t) => setEditForm({ ...editForm, eapcetHallTicket: t.toUpperCase() })} placeholder="e.g. EAPCET2024XXXXX" autoCapitalize="characters" />
+          <Input label="Rank"               value={editForm.eapcetRank}        onChangeText={(t) => setEditForm({ ...editForm, eapcetRank: t })}                    placeholder="e.g. 12345"           keyboardType="numeric" />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setEapcetModal)} disabled={saving} style={styles.saveBtn} />
+        </ScrollView>
+      </Modal>
+
+      {/* Parent Modal */}
+      <Modal visible={parentModal} onClose={() => setParentModal(false)} title="Edit Parent Details" size="lg">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Input label="Father's Name"       value={editForm.fatherName}       onChangeText={(t) => setEditForm({ ...editForm, fatherName: t })}       placeholder="Father's name" />
+          <Input label="Father's Phone"      value={editForm.fatherPhone}      onChangeText={(t) => setEditForm({ ...editForm, fatherPhone: t })}      placeholder="Father's phone" keyboardType="phone-pad" />
+          <Input label="Father's Profession" value={editForm.fatherProfession} onChangeText={(t) => setEditForm({ ...editForm, fatherProfession: t })} placeholder="e.g. Farmer, Teacher" />
+          <Input label="Mother's Name"       value={editForm.motherName}       onChangeText={(t) => setEditForm({ ...editForm, motherName: t })}       placeholder="Mother's name" />
+          <Input label="Mother's Phone"      value={editForm.motherPhone}      onChangeText={(t) => setEditForm({ ...editForm, motherPhone: t })}      placeholder="Mother's phone" keyboardType="phone-pad" />
+          <Input label="Mother's Profession" value={editForm.motherProfession} onChangeText={(t) => setEditForm({ ...editForm, motherProfession: t })} placeholder="e.g. Housewife, Teacher" />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setParentModal)} disabled={saving} style={styles.saveBtn} />
+        </ScrollView>
+      </Modal>
+
+      {/* General Info Modal */}
+      <Modal visible={generalModal} onClose={() => setGeneralModal(false)} title="General Info — Student Interest" size="lg">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Input label="Hobbies"          value={editForm.hobbies}        onChangeText={(t) => setEditForm({ ...editForm, hobbies: t })}        placeholder="e.g. Reading, Gaming" multiline />
+          <Input label="Skills & Values"  value={editForm.skillsValues}   onChangeText={(t) => setEditForm({ ...editForm, skillsValues: t })}   placeholder="e.g. Leadership, Coding" multiline />
+          <Input label="Short Term Goals" value={editForm.goalsShortTerm} onChangeText={(t) => setEditForm({ ...editForm, goalsShortTerm: t })} placeholder="e.g. Get an internship" multiline />
+          <Input label="Long Term Goals"  value={editForm.goalsLongTerm}  onChangeText={(t) => setEditForm({ ...editForm, goalsLongTerm: t })}  placeholder="e.g. Software engineer" multiline />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setGeneralModal)} disabled={saving} style={styles.saveBtn} />
+        </ScrollView>
+      </Modal>
+
+      {/* Sports Modal */}
+      <Modal visible={sportsModal} onClose={() => setSportsModal(false)} title="Sports Details" size="lg">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Input label="Sport Name"      value={editForm.sportName}     onChangeText={(t) => setEditForm({ ...editForm, sportName: t })}     placeholder="e.g. Cricket, Kabaddi" />
+          <Input label="Role in Sports"  value={editForm.sportRole}     onChangeText={(t) => setEditForm({ ...editForm, sportRole: t })}     placeholder="e.g. Captain, Player" />
+          <Input label="Tournaments Won" value={editForm.tournamentWon} onChangeText={(t) => setEditForm({ ...editForm, tournamentWon: t })} placeholder="e.g. District Level 2023" multiline />
+          <Input label="Position"        value={editForm.sportPosition} onChangeText={(t) => setEditForm({ ...editForm, sportPosition: t })} placeholder="e.g. 1st, 2nd, 3rd" />
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setSportsModal)} disabled={saving} style={styles.saveBtn} />
+        </ScrollView>
+      </Modal>
+
+      {/* Career Interest Modal */}
+      <Modal visible={careerModal} onClose={() => setCareerModal(false)} title="Career Interest" size="lg">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.modalSectionLabel}>I am interested in</Text>
+          <View style={styles.pillRow}>
+            {[{ val: "placement", label: "🏢 Placements" }, { val: "higher_education", label: "🎓 Higher Education" }].map((o) => (
+              <TouchableOpacity
+                key={o.val}
+                style={[styles.pill, styles.pillWide, editForm.careerInterest === o.val && styles.pillActive]}
+                onPress={() => setEditForm({ ...editForm, careerInterest: o.val })}
+              >
+                <Text style={[styles.pillText, editForm.careerInterest === o.val && styles.pillTextActive]}>{o.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {editForm.careerInterest === "placement" && (
+            <Input label="Domain of Interest" value={editForm.placementDomain} onChangeText={(t) => setEditForm({ ...editForm, placementDomain: t })} placeholder="e.g. Software, Data Science, Core" />
+          )}
+
+          {editForm.careerInterest === "higher_education" && (
+            <>
+              <Text style={styles.modalSectionLabel}>Location</Text>
+              <View style={styles.pillRow}>
+                {[{ val: "india", label: "🇮🇳 India" }, { val: "abroad", label: "🌍 Abroad" }].map((o) => (
+                  <TouchableOpacity key={o.val} style={[styles.pill, styles.pillWide, editForm.higherStudiesCountry === o.val && styles.pillActive]} onPress={() => setEditForm({ ...editForm, higherStudiesCountry: o.val })}>
+                    <Text style={[styles.pillText, editForm.higherStudiesCountry === o.val && styles.pillTextActive]}>{o.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {editForm.higherStudiesCountry === "abroad" && (
+                <Input label="Which Country?" value={editForm.higherStudiesCountryDetail} onChangeText={(t) => setEditForm({ ...editForm, higherStudiesCountryDetail: t })} placeholder="e.g. USA, UK, Germany" />
+              )}
+              <Input label="Degree Aspired" value={editForm.higherStudiesDegree}  onChangeText={(t) => setEditForm({ ...editForm, higherStudiesDegree: t })}  placeholder="e.g. MTech, MBA, MS" />
+              <Input label="Sector"         value={editForm.higherStudiesSector}  onChangeText={(t) => setEditForm({ ...editForm, higherStudiesSector: t })}  placeholder="e.g. AI, Finance, Management" />
+            </>
+          )}
+
+          <Button title={saving ? "Saving..." : "Save Changes"} onPress={() => saveSection(setCareerModal)} disabled={saving} style={styles.saveBtn} />
         </ScrollView>
       </Modal>
 
       {/* Document Upload Modal */}
       <Modal
         visible={docUploadModal}
-        onClose={() => {
-          setDocUploadModal(false);
-          setSelectedDoc(null);
-        }}
+        onClose={() => { setDocUploadModal(false); setSelectedDoc(null); }}
         title={selectedDoc?.title || "Upload Document"}
         subtitle="Select a file from your device"
         icon="📤"
@@ -1349,214 +634,112 @@ const StudentDashboard = ({ navigation }) => {
   );
 };
 
+// ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#F8FAFC" },
+
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16,
     backgroundColor: "#FFFFFF",
   },
   headerLeft: { flex: 1, marginRight: 12 },
-  greeting: { fontSize: 13, color: "#94A3B8", fontWeight: "500" },
-  studentName: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginTop: 2,
-  },
-  rollNumber: { fontSize: 12, color: "#64748B", marginTop: 2 },
-  avatarBtn: { position: "relative" },
+  greeting:    { fontSize: 13, color: "#94A3B8", fontWeight: "500" },
+  studentName: { fontSize: 22, fontWeight: "800", color: "#0F172A", marginTop: 2 },
+  rollNumber:  { fontSize: 12, color: "#64748B", marginTop: 2 },
+  avatarBtn: {},
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#DBEAFE",
-    justifyContent: "center",
-    alignItems: "center",
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: "#DBEAFE", justifyContent: "center", alignItems: "center",
   },
   avatarText: { fontSize: 16, fontWeight: "800", color: "#1D4ED8" },
 
   docStatusCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    marginHorizontal: 16, marginTop: 16, backgroundColor: "#FFFFFF",
+    borderRadius: 14, padding: 16,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  docStatusHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  docStatusTitle: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
-  uploadLink: { fontSize: 14, color: "#1D4ED8", fontWeight: "600" },
-
-  statsRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
+  docStatusHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  docStatusTitle:  { fontSize: 16, fontWeight: "700", color: "#0F172A" },
+  uploadLink:      { fontSize: 14, color: "#1D4ED8", fontWeight: "600" },
+  statsRow:        { flexDirection: "row", justifyContent: "space-between", gap: 8 },
   statChip: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    backgroundColor: "#FFFFFF",
+    flex: 1, alignItems: "center", paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1.5, backgroundColor: "#FFFFFF",
   },
   statValue: { fontSize: 20, fontWeight: "800" },
-  statLabel: {
-    fontSize: 10,
-    color: "#64748B",
-    marginTop: 2,
-    fontWeight: "500",
-  },
+  statLabel: { fontSize: 10, color: "#64748B", marginTop: 2, fontWeight: "500" },
 
   attentionSection: { marginTop: 16, paddingHorizontal: 16 },
-  attentionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 10,
-  },
-  attentionList: { gap: 8 },
+  attentionTitle:   { fontSize: 16, fontWeight: "700", color: "#0F172A", marginBottom: 10 },
   attentionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFBEB",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-    gap: 12,
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#FFFBEB", borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: "#FDE68A", gap: 12, marginBottom: 8,
   },
-  attentionDocIcon: { fontSize: 24 },
-  attentionInfo: { flex: 1 },
+  attentionDocIcon:  { fontSize: 24 },
+  attentionInfo:     { flex: 1 },
   attentionTitleText: { fontSize: 14, fontWeight: "600", color: "#1E293B" },
-  attentionStatus: { fontSize: 12, color: "#92400E", marginTop: 2 },
-  attentionArrow: { fontSize: 22, color: "#CBD5E1" },
-  viewAllBtn: { alignItems: "center", marginTop: 12, paddingVertical: 8 },
-  viewAllText: { color: "#1D4ED8", fontWeight: "600", fontSize: 14 },
+  attentionStatus:   { fontSize: 12, color: "#92400E", marginTop: 2 },
+  attentionArrow:    { fontSize: 22, color: "#CBD5E1" },
+  viewAllBtn:        { alignItems: "center", marginTop: 8, paddingVertical: 8 },
+  viewAllText:       { color: "#1D4ED8", fontWeight: "600", fontSize: 14 },
 
   card: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    marginHorizontal: 16, marginTop: 16, backgroundColor: "#FFFFFF",
+    borderRadius: 14, padding: 16,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
-  editLink: { fontSize: 14, color: "#1D4ED8", fontWeight: "600" },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  cardTitle:  { fontSize: 16, fontWeight: "700", color: "#0F172A" },
+  editLink:   { fontSize: 14, color: "#1D4ED8", fontWeight: "600" },
+
   detailsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  detailItem: { width: "47%" },
+  detailItem:  { width: "47%" },
   detailItemFull: { width: "100%", marginTop: 8 },
-  detailLabel: {
-    fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "500",
-    marginBottom: 2,
-  },
+  detailLabel: { fontSize: 11, color: "#94A3B8", fontWeight: "500", marginBottom: 2 },
   detailValue: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
 
-  higherStudiesBox: { alignItems: "flex-start" },
-  interestTag: {
-    backgroundColor: "#F0FDF4",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  interestTagText: { fontSize: 13, fontWeight: "600", color: "#16A34A" },
-  interestDetail: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
-  notSet: { fontSize: 14, color: "#94A3B8" },
-
-  modalSectionTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#1D4ED8",
-    marginTop: 16,
-    marginBottom: 10,
-  },
-  subLabel: { fontSize: 13, color: "#64748B", marginBottom: 8 },
-  toggleRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: "#F1F5F9",
-    alignItems: "center",
-  },
-  toggleBtnActive: { backgroundColor: "#1D4ED8" },
-  toggleText: { fontSize: 14, fontWeight: "600", color: "#64748B" },
-  toggleTextActive: { color: "#FFFFFF" },
-  saveBtn: { marginTop: 20, marginBottom: 20 },
+  subSectionTitle: { fontSize: 13, fontWeight: "700", color: "#64748B", marginBottom: 8 },
 
   docSectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#64748B",
-    marginTop: 16,
-    marginBottom: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    fontSize: 13, fontWeight: "600", color: "#64748B",
+    marginTop: 16, marginBottom: 8, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: "#F1F5F9",
   },
   docUploadItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F8FAFC",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#F8FAFC", padding: 12, borderRadius: 10,
+    marginBottom: 8, borderWidth: 1, borderColor: "#E2E8F0",
   },
-  docUploadItemUploaded: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
+  docUploadItemUploaded: { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" },
+  docUploadIcon: { fontSize: 20, marginRight: 12 },
+  docUploadInfo: { flex: 1 },
+  docUploadTitle:  { fontSize: 14, fontWeight: "600", color: "#0F172A" },
+  docUploadStatus: { fontSize: 12, color: "#64748B", marginTop: 2 },
+  statusApproved:  { color: "#16A34A" },
+  statusRejected:  { color: "#DC2626" },
+  docArrow:        { fontSize: 20, color: "#94A3B8" },
+
+  careerTag: {
+    backgroundColor: "#EFF6FF", paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 8, alignSelf: "flex-start", marginBottom: 10,
   },
-  docUploadInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
+  careerTagText: { fontSize: 13, fontWeight: "700", color: "#1D4ED8" },
+  notSet: { fontSize: 14, color: "#94A3B8" },
+
+  // Modal styles
+  modalSectionLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 8, marginTop: 8 },
+  pillRow:  { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
+  pill: {
+    paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8,
+    backgroundColor: "#F1F5F9", borderWidth: 1, borderColor: "#E2E8F0",
   },
-  docUploadIcon: { fontSize: 20 },
-  docUploadTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#0F172A",
-  },
-  docUploadStatus: {
-    fontSize: 12,
-    color: "#64748B",
-    marginTop: 2,
-  },
-  docUploadStatusApproved: {
-    color: "#16A34A",
-  },
-  docUploadArrow: {
-    fontSize: 20,
-    color: "#94A3B8",
-  },
+  pillWide: { flex: 1, alignItems: "center", paddingVertical: 12 },
+  pillActive: { backgroundColor: "#1D4ED8", borderColor: "#1D4ED8" },
+  pillText:   { fontSize: 13, fontWeight: "600", color: "#64748B" },
+  pillTextActive: { color: "#FFFFFF" },
+  saveBtn: { marginTop: 20, marginBottom: 20 },
 });
 
 export default StudentDashboard;

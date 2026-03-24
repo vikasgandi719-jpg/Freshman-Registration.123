@@ -1,123 +1,219 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView,
-  ScrollView, RefreshControl,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import Header             from '../../components/common/Header';
-import DocumentStatusList from '../../components/student/DocumentStatusList';
-import DocumentUploader   from '../../components/student/DocumentUploader';
-import Modal              from '../../components/common/Modal';
-import { useAuth }        from '../../context/AuthContext';
-import useDocuments       from '../../hooks/useDocuments';
-import { SCREENS }        from '../../constants/config';
+import * as DocumentPicker from 'expo-document-picker';
 
-const DocumentUploadScreen = ({ navigation }) => {
-  const { user }                                           = useAuth();
-  const { documents, fetchDocuments, uploadDocument,
-          isLoading, uploading }                           = useDocuments();
-  const [refreshing,    setRefreshing]                     = useState(false);
-  const [uploadModal,   setUploadModal]                    = useState(false);
-  const [selectedDoc,   setSelectedDoc]                    = useState(null);
+const DocumentUploader = ({
+  documentTitle = 'Document',
+  documentId,
+  allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'],
+  maxSizeMB = 5,
+  onUploadSuccess,
+  onUploadError,
+  existingFileUri = null,
+}) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    if (user?.id) fetchDocuments(user.id);
-  }, [user]);
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: allowedTypes,
+        copyToCacheDirectory: true,
+      });
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    if (user?.id) await fetchDocuments(user.id);
-    setRefreshing(false);
+      if (result.canceled) return;
+
+      const file = result.assets?.[0] || result;
+
+      if (file.size && file.size > maxSizeMB * 1024 * 1024) {
+        Alert.alert('File Too Large', `Max size is ${maxSizeMB}MB.`);
+        return;
+      }
+
+      setSelectedFile(file);
+    } catch (error) {
+      Alert.alert('Error', 'Could not pick document.');
+      onUploadError && onUploadError(error);
+    }
   };
 
-  const handleUploadPress = (doc) => {
-    setSelectedDoc(doc);
-    setUploadModal(true);
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setUploading(true);
+
+    try {
+      const result = await onUploadSuccess?.({
+        ...selectedFile,
+        documentId,
+      });
+
+      if (result?.success === false) {
+        throw new Error(result.error || 'Upload failed.');
+      }
+
+      Alert.alert('Success', 'Document uploaded successfully.');
+      setSelectedFile(null);
+    } catch (error) {
+      Alert.alert('Upload Failed', error?.message || 'Please try again.');
+      onUploadError && onUploadError(error);
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleDocumentPress = (doc) => {
-    navigation.navigate(SCREENS.DOCUMENT_DETAIL, { document: doc });
+  const getFileIcon = (mimeType) => {
+    if (!mimeType) return '📄';
+    if (mimeType.includes('pdf')) return '📕';
+    if (mimeType.includes('image')) return '🖼️';
+    return '📄';
   };
 
-  const handleUploadSuccess = async (file) => {
-    await uploadDocument(selectedDoc.id, file.uri, file.mimeType, file.name);
-    setUploadModal(false);
-    setSelectedDoc(null);
-    if (user?.id) fetchDocuments(user.id);
+  const formatSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <Header
-        title="My Documents"
-        subtitle="Upload & track your documents"
-        variant="default"
-        showBorder
-      />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{documentTitle}</Text>
+        <Text style={styles.subtitle}>
+          Accepted: PDF, JPG, PNG · Max {maxSizeMB}MB
+        </Text>
+      </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1D4ED8']} />}
-      >
-        {/* Info banner */}
-        <View style={styles.infoBanner}>
-          <Text style={styles.infoBannerIcon}>ℹ️</Text>
-          <Text style={styles.infoBannerText}>
-            Upload all required documents in PDF or image format.
-            Max file size is 5MB per document.
+      {!selectedFile ? (
+        <TouchableOpacity
+          style={styles.dropZone}
+          onPress={pickDocument}
+          activeOpacity={0.75}
+        >
+          <Text style={styles.dropIcon}>☁️</Text>
+          <Text style={styles.dropTitle}>Tap to select file</Text>
+          <Text style={styles.dropHint}>
+            PDF, JPG, or PNG up to {maxSizeMB}MB
           </Text>
+
+          {existingFileUri && (
+            <View style={styles.existingBadge}>
+              <Text style={styles.existingBadgeText}>
+                ⚠️ Will replace existing file
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.filePreview}>
+          <Text style={styles.filePreviewIcon}>
+            {getFileIcon(selectedFile.mimeType)}
+          </Text>
+
+          <View style={styles.fileInfo}>
+            <Text style={styles.fileName} numberOfLines={1}>
+              {selectedFile.name}
+            </Text>
+            <Text style={styles.fileSize}>{formatSize(selectedFile.size)}</Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => setSelectedFile(null)}
+            disabled={uploading}
+          >
+            <Text style={styles.removeBtnText}>✕</Text>
+          </TouchableOpacity>
         </View>
+      )}
 
-        {/* Document list */}
-        <DocumentStatusList
-          documents={documents}
-          onDocumentPress={handleDocumentPress}
-          onUploadPress={handleUploadPress}
-          showFilter
-        />
-
-        <View style={{ height: 30 }} />
-      </ScrollView>
-
-      {/* Upload Modal */}
-      <Modal
-        visible={uploadModal}
-        onClose={() => { setUploadModal(false); setSelectedDoc(null); }}
-        title={selectedDoc?.title || 'Upload Document'}
-        subtitle="Select a file from your device"
-        icon="📤"
-        size="md"
-      >
-        {selectedDoc && (
-          <DocumentUploader
-            documentTitle={selectedDoc.title}
-            documentId={selectedDoc.id}
-            existingFileUri={selectedDoc.fileUri}
-            onUploadSuccess={handleUploadSuccess}
-            onUploadError={() => {}}
-          />
-        )}
-      </Modal>
-    </SafeAreaView>
+      {selectedFile && (
+        <TouchableOpacity
+          style={[styles.uploadBtn, uploading && styles.uploadBtnDisabled]}
+          onPress={handleUpload}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Text style={styles.uploadBtnText}>Upload Document</Text>
+          )}
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safe:        { flex: 1, backgroundColor: '#F8FAFC' },
-  infoBanner: {
-    flexDirection:     'row',
-    alignItems:        'flex-start',
-    backgroundColor:   '#EFF6FF',
-    marginHorizontal:  16,
-    marginTop:         12,
-    marginBottom:      4,
-    padding:           12,
-    borderRadius:      10,
-    gap:               10,
-    borderWidth:       1,
-    borderColor:       '#BFDBFE',
+  container: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  infoBannerIcon: { fontSize: 16, marginTop: 1 },
-  infoBannerText: { flex: 1, fontSize: 12, color: '#1E40AF', lineHeight: 18 },
+  header: { marginBottom: 14 },
+  title: { fontSize: 16, fontWeight: '700', color: '#1E293B' },
+  subtitle: { fontSize: 12, color: '#94A3B8', marginTop: 2 },
+  dropZone: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    paddingVertical: 32,
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  dropIcon: { fontSize: 36, marginBottom: 8 },
+  dropTitle: { fontSize: 15, fontWeight: '600', color: '#334155' },
+  dropHint: { fontSize: 12, color: '#94A3B8', marginTop: 4 },
+  existingBadge: {
+    marginTop: 10,
+    backgroundColor: '#FFF7ED',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  existingBadgeText: { fontSize: 11, color: '#C2410C' },
+  filePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  filePreviewIcon: { fontSize: 28, marginRight: 10 },
+  fileInfo: { flex: 1 },
+  fileName: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
+  fileSize: { fontSize: 12, color: '#94A3B8', marginTop: 2 },
+  removeBtnText: {
+    fontSize: 16,
+    color: '#94A3B8',
+    fontWeight: '600',
+    padding: 6,
+  },
+  uploadBtn: {
+    backgroundColor: '#1D4ED8',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  uploadBtnDisabled: { backgroundColor: '#93C5FD' },
+  uploadBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 });
 
-export default DocumentUploadScreen;
+export default DocumentUploader;

@@ -14,8 +14,9 @@ import StudentListScreen      from "../screens/admin/StudentListScreen";
 import StudentDetailScreen    from "../screens/admin/StudentDetailScreen";
 import VerificationScreen     from "../screens/admin/VerificationScreen";
 import BranchManagementScreen from "../screens/admin/BranchManagementScreen";
-import AdminSettingsScreen    from "../screens/admin/AdminSettingsScreen";
-import AdminSidebar           from "../components/admin/AdminSidebar";
+import AdminSettingsScreen from "../screens/admin/AdminSettingsScreen";
+import AdminManagementScreen from "../screens/admin/AdminManagementScreen";
+import AdminSidebar from "../components/admin/AdminSidebar";
 
 const Drawer = createDrawerNavigator();
 const Stack  = createNativeStackNavigator();
@@ -343,8 +344,8 @@ const CustomDrawerContent = (props) => {
     [SCREENS.STUDENT_LIST]:      "students",
     [SCREENS.VERIFICATION]:      "verification",
     [SCREENS.BRANCH_MANAGEMENT]: "branches",
-    TeamScreen:                  "team",
-    [SCREENS.ADMIN_SETTINGS]:    "settings",
+    [SCREENS.ADMIN_MANAGEMENT]: "admins",
+    [SCREENS.ADMIN_SETTINGS]: "settings",
   };
 
   const idToScreen = Object.fromEntries(
@@ -367,25 +368,46 @@ const CustomDrawerContent = (props) => {
   );
 };
 
-const AdminDrawer = () => (
-  <Drawer.Navigator
-    drawerContent={(props) => <CustomDrawerContent {...props} />}
-    screenOptions={{
-      headerShown:    false,
-      drawerType:     Platform.OS === "web" ? "permanent" : "slide",
-      drawerStyle:    { width: 240 },
-      overlayColor:   "rgba(0,0,0,0.4)",
-      swipeEdgeWidth: 40,
-    }}
-  >
-    <Drawer.Screen name={SCREENS.ADMIN_DASHBOARD}   component={AdminDashboard}        />
-    <Drawer.Screen name={SCREENS.STUDENT_LIST}      component={StudentListScreen}      />
-    <Drawer.Screen name={SCREENS.VERIFICATION}      component={VerificationScreen}     />
-    <Drawer.Screen name={SCREENS.BRANCH_MANAGEMENT} component={BranchManagementScreen} />
-    <Drawer.Screen name={SCREENS.ADMIN_SETTINGS}    component={AdminSettingsScreen}    />
-    <Drawer.Screen name="TeamScreen"                component={TeamScreen}             />
-  </Drawer.Navigator>
-);
+// ─── Admin Drawer Navigator ───────────────────────────────────────────────────
+const AdminDrawer = () => {
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerShown: false,
+        drawerType: Platform.OS === "web" ? "permanent" : "slide", // ✅ fixed for web
+        drawerStyle: { width: 240 },
+        overlayColor: "rgba(0,0,0,0.4)",
+        swipeEdgeWidth: 40,
+      }}
+    >
+      <Drawer.Screen
+        name={SCREENS.ADMIN_DASHBOARD}
+        component={AdminDashboard}
+      />
+      <Drawer.Screen
+        name={SCREENS.STUDENT_LIST}
+        component={StudentListScreen}
+      />
+      <Drawer.Screen
+        name={SCREENS.VERIFICATION}
+        component={VerificationScreen}
+      />
+      <Drawer.Screen
+        name={SCREENS.BRANCH_MANAGEMENT}
+        component={BranchManagementScreen}
+      />
+      <Drawer.Screen
+        name={SCREENS.ADMIN_MANAGEMENT}
+        component={AdminManagementScreen}
+      />
+      <Drawer.Screen
+        name={SCREENS.ADMIN_SETTINGS}
+        component={AdminSettingsScreen}
+      />
+    </Drawer.Navigator>
+  );
+};
 
 const AdminNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>

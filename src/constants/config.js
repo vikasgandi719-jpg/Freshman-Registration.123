@@ -11,7 +11,7 @@ export const APP = {
 
 // ─── API Configuration ────────────────────────────────────────────────────────
 export const API = {
-  BASE_URL: "https://api.bvritn.ac.in/v1", // replace with real URL
+  BASE_URL: "http://localhost:5000/v1", // replace with real URL
   TIMEOUT: 15000, // 15 seconds
   RETRY_COUNT: 3,
 
@@ -113,6 +113,7 @@ export const SCREENS = {
   VERIFICATION: "VerificationScreen",
   BRANCH_MANAGEMENT: "BranchManagementScreen",
   ADMIN_SETTINGS: "AdminSettingsScreen",
+  ADMIN_MANAGEMENT: "AdminManagementScreen",
 };
 
 // ─── Toast / Alert Durations ──────────────────────────────────────────────────

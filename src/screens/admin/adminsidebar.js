@@ -1,28 +1,41 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 
 const MENU_ITEMS = [
-  { id: 'dashboard',    label: 'Dashboard',        icon: '🏠' },
-  { id: 'students',     label: 'Students',          icon: '🎓' },
-  { id: 'verification', label: 'Verification',      icon: '✅' },
-  { id: 'branches',     label: 'Branch Management', icon: '🏫' },
-  { id: 'team',         label: 'Team',              icon: '👥' },
-  { id: 'settings',     label: 'Settings',          icon: '⚙️' },
+  { id: "dashboard", label: "Dashboard", icon: "D" },
+  { id: "students", label: "Students", icon: "S" },
+  { id: "verification", label: "Verification", icon: "V" },
+  { id: "branches", label: "Branch Management", icon: "B" },
+  { id: "admins", label: "Admin Management", icon: "A" },
+  { id: "settings", label: "Settings", icon: "G" },
 ];
 
 const AdminSidebar = ({
-  activeScreen = 'dashboard',
-  onNavigate = () => {},
-  onLogout = () => {},
-  adminName = 'Admin',
-  adminRole = 'Super Admin',
+  activeScreen = "dashboard",
+  onNavigate = () => {}, // ✅ prevent undefined errors
+  onLogout = () => {}, // ✅ added logout handler
+  adminName = "Admin",
+  adminRole = "Super Admin",
 }) => {
+  // ✅ Safe initials handling
   const initials = adminName
-    ? adminName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'AD';
+    ? adminName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "AD";
 
   return (
     <View style={styles.sidebar}>
+      {/* Profile */}
       <View style={styles.profileSection}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>
@@ -47,7 +60,10 @@ const AdminSidebar = ({
               activeOpacity={0.6}
             >
               <Text style={styles.menuIcon}>{item.icon}</Text>
-              <Text style={[styles.menuLabel, isActive && styles.menuLabelActive]}>
+
+              <Text
+                style={[styles.menuLabel, isActive && styles.menuLabelActive]}
+              >
                 {item.label}
               </Text>
               {isActive && <View style={styles.activeIndicator} />}
@@ -56,8 +72,13 @@ const AdminSidebar = ({
         })}
       </ScrollView>
 
-      <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.6}>
-        <Text style={styles.logoutIcon}>🚪</Text>
+      {/* Logout */}
+      <TouchableOpacity
+        style={styles.logoutBtn}
+        onPress={onLogout} // ✅ now works
+        activeOpacity={0.6}
+      >
+        <Text style={styles.logoutIcon}>L</Text>
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
@@ -65,24 +86,111 @@ const AdminSidebar = ({
 };
 
 const styles = StyleSheet.create({
-  sidebar:         { width: 240, backgroundColor: '#0F172A', flex: 1, paddingTop: 50, paddingBottom: 24 },
-  profileSection:  { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 20 },
-  avatar:          { width: 64, height: 64, borderRadius: 32, backgroundColor: '#1D4ED8', justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  avatarText:      { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
-  adminName:       { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 6 },
-  roleBadge:       { backgroundColor: '#1E3A8A', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
-  roleText:        { fontSize: 11, color: '#93C5FD', fontWeight: '600' },
-  divider:         { height: 1, backgroundColor: '#1E293B', marginHorizontal: 20, marginBottom: 12 },
-  menuList:        { flex: 1, paddingHorizontal: 12 },
-  menuItem:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10, marginBottom: 4, position: 'relative' },
-  menuItemActive:  { backgroundColor: '#1E3A8A' },
-  menuIcon:        { fontSize: 18, marginRight: 12 },
-  menuLabel:       { fontSize: 14, color: '#94A3B8', fontWeight: '500' },
-  menuLabelActive: { color: '#FFFFFF', fontWeight: '700' },
-  activeIndicator: { position: 'absolute', right: 0, height: '70%', top: '15%', width: 3, backgroundColor: '#3B82F6', borderRadius: 2 },
-  logoutBtn:       { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10, backgroundColor: '#1E293B' },
-  logoutIcon:      { fontSize: 18, marginRight: 12 },
-  logoutText:      { fontSize: 14, color: '#F87171', fontWeight: '600' },
+  sidebar: {
+    width: 240,
+    backgroundColor: "#0F172A",
+    flex: 1,
+    paddingTop: 50,
+    paddingBottom: 24,
+  },
+  profileSection: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#1D4ED8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  avatarText: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  adminName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 6,
+  },
+  roleBadge: {
+    backgroundColor: "#1E3A8A",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  roleText: {
+    fontSize: 11,
+    color: "#93C5FD",
+    fontWeight: "600",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#1E293B",
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  menuList: {
+    flex: 1,
+    paddingHorizontal: 12,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    marginBottom: 4,
+    position: "relative",
+  },
+  menuItemActive: {
+    backgroundColor: "#1E3A8A",
+  },
+  menuIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  menuLabel: {
+    fontSize: 14,
+    color: "#94A3B8",
+    fontWeight: "500",
+  },
+  menuLabelActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  activeIndicator: {
+    position: "absolute",
+    right: 0,
+    height: "70%", // ✅ fixed alignment
+    top: "15%",
+    width: 3,
+    backgroundColor: "#3B82F6",
+    borderRadius: 2,
+  },
+  logoutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: "#1E293B",
+  },
+  logoutIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  logoutText: {
+    fontSize: 14,
+    color: "#F87171",
+    fontWeight: "600",
+  },
 });
 
 export default AdminSidebar;
