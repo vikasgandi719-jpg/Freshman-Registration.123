@@ -1,42 +1,40 @@
+const path = require('path');
 const User              = require('../models/User');
 const { hash, compare } = require('../utils/hashPassword');
 const { signToken }     = require('../config/jwt');
-const { generateStudentId } = require('../utils/generateId');
+const { signup, validateSignupPayload } = require('../services/authService');
 const { generateOTP, storeOTP, verifyOTP } = require('../services/otpService');
 const { success, error } = require('../utils/responseHelper');
 
-// POST /api/auth/register
+// POST /api/auth/signup
 exports.register = async (req, res, next) => {
   try {
-    const { name, parentPhone, interhallTicket, dob, password } = req.body;
+    const { name, email, password } = req.body;
 
-    if (!name || !parentPhone || !interhallTicket || !dob || !password) {
-      return error(res, 'All fields are required', 400);
-    }
-
-    // Check duplicate interhall ticket
-    const existing = await User.findByUniqueId(interhallTicket);
-    if (existing) return error(res, 'Student already registered', 409);
-
-    const counter  = await User.getNextCounter();
-    const uniqueId = generateStudentId(counter);
-    const passwordHash = await hash(password);
-
-    const user = await User.create({
-      name: name.trim(),
-      parentPhone: parentPhone.trim(),
-      interhallTicket: interhallTicket.trim().toUpperCase(),
-      dob,
-      passwordHash,
-      uniqueId,
+    const validationError = validateSignupPayload({
+      name: name?.trim(),
+      email: email?.trim().toLowerCase(),
+      password,
     });
 
-    return success(res, {
-      uniqueId: user.unique_id,
-      userId: user.id,
-      name: user.name,
-    }, 'Registration successful', 201);
+    if (validationError) return error(res, validationError, 400);
+
+    // Save uploaded file path (if present).
+    const fileUrl = req.file ? `/uploads/signup/${path.basename(req.file.path)}` : null;
+
+    const user = await signup({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      fileUrl,
+    });
+
+    return success(res, { user }, 'Signup successful', 201);
   } catch (err) {
+    if (err.statusCode === 409) {
+      return error(res, err.message, 409);
+    }
+
     next(err);
   }
 };

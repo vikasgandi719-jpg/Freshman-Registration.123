@@ -16,20 +16,16 @@ const useAuth = () => {
 
   const validateRegisterForm = (data) => {
     const errors = {};
-    if (!data.name?.trim()) errors.name = "Student name is required.";
+    if (!data.name?.trim()) errors.name = "Name is required.";
     else if (data.name.trim().length < 2) errors.name = "Name is too short.";
 
-    if (!data.parentPhone?.trim())
-      errors.parentPhone = "Parent's phone number is required.";
-    else if (!/^[6-9]\d{9}$/.test(data.parentPhone))
-      errors.parentPhone = "Enter a valid 10-digit phone number.";
-
-    if (!data.interhallTicket?.trim())
-      errors.interhallTicket = "Interhall ticket number is required.";
-
-    if (!data.dob) errors.dob = "Date of birth is required.";
+    if (!data.email?.trim()) errors.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+      errors.email = "Enter a valid email address.";
 
     if (!data.password?.trim()) errors.password = "Password is required.";
+    else if (data.password.trim().length < 8)
+      errors.password = "Password must be at least 8 characters.";
 
     return errors;
   };

@@ -1,19 +1,26 @@
 const router = require('express').Router();
-const auth   = require('../middleware/auth');
+const auth = require('../middleware/auth');
+const signupUpload = require('../middleware/uploads/signupUpload');
 const {
-  register, login, logout,
-  sendOTP, verifyOTP, resendOTP,
-  refreshToken, changePassword,
+  register,
+  login,
+  logout,
+  sendOTP,
+  verifyOTP,
+  resendOTP,
+  refreshToken,
+  changePassword,
 } = require('../controllers/authController');
 
 // Public
-router.post('/register',      register);
-router.post('/login',         login);
-router.post('/logout',        logout);
-router.post('/refresh',       refreshToken);
-router.post('/otp/send',      sendOTP);
-router.post('/otp/verify',    verifyOTP);
-router.post('/otp/resend',    resendOTP);
+router.post('/signup', signupUpload.single('file'), register);
+router.post('/register', signupUpload.single('file'), register); // backward compatible alias
+router.post('/login', login);
+router.post('/logout', logout);
+router.post('/refresh', refreshToken);
+router.post('/otp/send', sendOTP);
+router.post('/otp/verify', verifyOTP);
+router.post('/otp/resend', resendOTP);
 
 // Protected
 router.post('/change-password', auth, changePassword);

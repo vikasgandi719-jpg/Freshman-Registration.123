@@ -10,8 +10,8 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
 import Input from "../../components/common/Input";
-import DatePicker from "../../components/auth/DatePicker";
 import { SCREENS } from "../../constants/config";
 import useAuthHook from "../../hooks/useAuth";
 import { useAuth } from "../../context/AuthContext";
@@ -19,9 +19,9 @@ import { useAuth } from "../../context/AuthContext";
 const RegisterScreen = ({ navigation }) => {
   const [form, setForm] = useState({
     name: "",
-    parentPhone: "",
-    interhallTicket: "",
-    dob: null,
+    email: "",
+    password: "",
+    file: null,
   });
   const [errors, setErrors] = useState({});
 
@@ -33,16 +33,28 @@ const RegisterScreen = ({ navigation }) => {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
   };
 
+  const pickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ["image/*", "application/pdf"],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+
+    if (!result.canceled && result.assets?.[0]) {
+      setField("file", result.assets[0]);
+    }
+  };
+
   const validateForm = () => {
     const stepErrors = {};
-    if (!form.name?.trim()) stepErrors.name = "Student name is required.";
-    if (!form.parentPhone?.trim())
-      stepErrors.parentPhone = "Parent's phone number is required.";
-    else if (!/^[6-9]\d{9}$/.test(form.parentPhone))
-      stepErrors.parentPhone = "Enter a valid 10-digit phone number.";
-    if (!form.interhallTicket?.trim())
-      stepErrors.interhallTicket = "Interhall ticket number is required.";
-    if (!form.dob) stepErrors.dob = "Date of birth is required.";
+    if (!form.name?.trim()) stepErrors.name = "Name is required.";
+    if (!form.email?.trim()) stepErrors.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      stepErrors.email = "Enter a valid email address.";
+    if (!form.password?.trim()) stepErrors.password = "Password is required.";
+    else if (form.password.length < 8)
+      stepErrors.password = "Password must be at least 8 characters.";
+
     return stepErrors;
   };
 
@@ -55,33 +67,23 @@ const RegisterScreen = ({ navigation }) => {
 
     clearError();
     setErrors({});
-const dobFormatted = form.dob
-  ? `${String(form.dob.getDate()).padStart(2, "0")}${String(form.dob.getMonth() + 1).padStart(2, "0")}${form.dob.getFullYear()}`
-  : "";
+
     const registerData = {
       name: form.name.trim(),
-      parentPhone: form.parentPhone.trim(),
-      interhallTicket: form.interhallTicket.trim().toUpperCase(),
-      dob: form.dob,
-      password: dobFormatted,
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      file: form.file,
     };
 
     const result = await register(registerData);
     if (result.success) {
-      const generatedId = result.data?.uniqueId || "2026-BVRITN-1a-0001";
       navigation.replace(SCREENS.REGISTRATION_SUCCESS, {
-        uniqueId: generatedId,
-        password: dobFormatted,
-        name: form.name.trim(),
+        name: registerData.name,
+        email: registerData.email,
       });
     } else if (result.errors) {
       setErrors(result.errors);
     }
-  };
-
-  const formatDOB = (dob) => {
-    if (!dob) return "";
-    return `${dob.getDate().toString().padStart(2, "0")}/${(dob.getMonth() + 1).toString().padStart(2, "0")}/${dob.getFullYear()}`;
   };
 
   return (
@@ -103,7 +105,9 @@ const dobFormatted = form.dob
           </TouchableOpacity>
 
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Fill in your details to register</Text>
+          <Text style={styles.subtitle}>
+            Fill in your details to register
+          </Text>
 
           {authError && (
             <View style={styles.errorBanner}>
@@ -113,7 +117,7 @@ const dobFormatted = form.dob
 
           <View style={styles.form}>
             <Input
-              label="Student Name"
+              label="Full Name"
               value={form.name}
               onChangeText={(t) => setField("name", t)}
               placeholder="Enter your full name"
@@ -123,44 +127,34 @@ const dobFormatted = form.dob
             />
 
             <Input
-              label="Parent's Phone Number"
-              value={form.parentPhone}
-              onChangeText={(t) => setField("parentPhone", t)}
-              placeholder="10-digit mobile number"
-              icon="📞"
-              error={errors.parentPhone}
+              label="Email"
+              value={form.email}
+              onChangeText={(t) => setField("email", t)}
+              placeholder="Enter your email"
+              icon="📧"
+              error={errors.email}
               required
-              keyboardType="phone-pad"
-              maxLength={10}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
 
             <Input
-              label="Interhall Ticket Number"
-              value={form.interhallTicket}
-              onChangeText={(t) => setField("interhallTicket", t.toUpperCase())}
-              placeholder="e.g. IHT123456"
-              icon="🎫"
-              error={errors.interhallTicket}
+              label="Password"
+              value={form.password}
+              onChangeText={(t) => setField("password", t)}
+              placeholder="Minimum 8 characters"
+              icon="🔒"
+              error={errors.password}
               required
-              autoCapitalize="characters"
+              secureTextEntry
             />
 
-            <DatePicker
-              label="Date of Birth"
-              value={form.dob}
-              onChange={(d) => setField("dob", d)}
-              placeholder="Select your date of birth"
-              maximumDate={new Date()}
-              error={errors.dob}
-            />
-
-            {form.dob && (
-              <View style={styles.passwordInfo}>
-                <Text style={styles.passwordInfoText}>
-                  Default Password: {formatDOB(form.dob)}
-                </Text>
-              </View>
-            )}
+            <TouchableOpacity style={styles.fileBtn} onPress={pickFile}>
+              <Text style={styles.fileBtnLabel}>Attach Profile/Document (Optional)</Text>
+              <Text style={styles.fileBtnValue}>
+                {form.file?.name || "Tap to choose file"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -178,9 +172,7 @@ const dobFormatted = form.dob
 
           <View style={styles.loginRow}>
             <Text style={styles.loginLabel}>Already have an account? </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate(SCREENS.LOGIN)}
-            >
+            <TouchableOpacity onPress={() => navigation.navigate(SCREENS.LOGIN)}>
               <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
@@ -207,15 +199,16 @@ const styles = StyleSheet.create({
   },
   errorBannerText: { fontSize: 13, color: "#BE123C", fontWeight: "500" },
   form: { marginBottom: 20 },
-  passwordInfo: {
+  fileBtn: {
     backgroundColor: "#EFF6FF",
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: "#1D4ED8",
+    borderColor: "#BFDBFE",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
-  passwordInfoText: { color: "#1D4ED8", fontSize: 13, fontWeight: "600" },
+  fileBtnLabel: { color: "#1D4ED8", fontWeight: "600", marginBottom: 4 },
+  fileBtnValue: { color: "#334155", fontSize: 13 },
   submitBtn: {
     backgroundColor: "#1D4ED8",
     borderRadius: 14,
