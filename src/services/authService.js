@@ -63,14 +63,23 @@ const authService = {
       studentCounter++;
       return { message: 'Registration successful (Demo Mode)', uniqueId, userId, name: data.name, firstName, lastName };
     }
-    const payload = {
-      name: data.name.trim(), parentPhone: data.parentPhone.trim(),
-      interhallTicket: data.interhallTicket.trim().toUpperCase(),
-      dob: data.dob ? data.dob.toISOString() : null, password: data.password,
-    };
-    const response = await fetch(`${API.BASE_URL}${API.ENDPOINTS.REGISTER}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    const formData = new FormData();
+    formData.append('name', data.name?.trim() || '');
+    formData.append('email', data.email?.trim().toLowerCase() || '');
+    formData.append('password', data.password || '');
+
+    // React Native file object shape: { uri, type, name }
+    if (data.file?.uri) {
+      formData.append('file', {
+        uri: data.file.uri,
+        type: data.file.type || 'application/octet-stream',
+        name: data.file.name || `signup-file-${Date.now()}`,
+      });
+    }
+
+    const response = await fetch(`${API.BASE_URL}${API.ENDPOINTS.SIGNUP || API.ENDPOINTS.REGISTER}`, {
+      method: 'POST',
+      body: formData,
     });
     if (!response.ok) { const err = await response.json().catch(() => ({})); throw new Error(err.message || 'Registration failed'); }
     return response.json();

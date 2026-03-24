@@ -18,6 +18,7 @@ export const API = {
   ENDPOINTS: {
     // Auth
     LOGIN: "/auth/login",
+    SIGNUP: "/auth/signup",
     REGISTER: "/auth/register",
     LOGOUT: "/auth/logout",
     REFRESH_TOKEN: "/auth/refresh",

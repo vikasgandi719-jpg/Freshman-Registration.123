@@ -1,18 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
-
-const prisma = new PrismaClient({
-  adapter,
-  log: ['query', 'info', 'warn', 'error'],
-});
+const path = require('path');
+const prisma = require('./src/lib/prisma');
 
 const { errorHandler } = require('./src/middleware/errorHandler');
 const authRoutes = require('./src/routes/authRoutes');
@@ -25,6 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ─── Database Connection Check ────────────────────────────────────────────────
 async function testDbConnection() {
@@ -45,10 +36,12 @@ app.use('/api/student', studentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/documents', documentRoutes);
 
-app.get('/', (req, res) => res.json({ 
-  message: 'BVRITN API is running ✓',
-  database: 'Connected' 
-}));
+app.get('/', (req, res) =>
+  res.json({
+    message: 'BVRITN API is running ✓',
+    database: 'Connected',
+  })
+);
 
 app.use(errorHandler);
 
