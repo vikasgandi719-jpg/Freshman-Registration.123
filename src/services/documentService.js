@@ -1,56 +1,134 @@
 import api from "./api";
-import { API } from "../constants/config";
+import { API, STORAGE_KEYS } from "../constants/config";
 import { DOCUMENT_LIST } from "../constants/documents";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DEMO_MODE = true;
 
-// ─── FIX: Persistent in-memory store for demo uploads ─────────────────────────
-// This map survives re-renders and re-fetches within the same app session.
-// Key: document id (e.g. "passport_photo"), Value: uploaded document object
-const demoUploadedDocs = new Map();
+const normalizeDocument = (doc) => {
+  const documentId =
+    doc.id ||
+    doc.document_type ||
+    doc.documentType ||
+    doc.type;
+
+  const documentType =
+    doc.document_type ||
+    doc.documentType ||
+    doc.type ||
+    documentId;
+
+  const base = DOCUMENT_LIST.find(
+    (d) => d.id === documentType || d.id === documentId
+  );
+
+  return {
+    id: documentType || documentId || base?.id,
+    type: base?.type || documentType || "document",
+    title: doc.title || base?.title || "Document",
+    description: doc.description || base?.description || "",
+    icon: doc.icon || base?.icon || "📄",
+    required:
+      typeof doc.required === "boolean" ? doc.required : (base?.required ?? false),
+
+    status: doc.status || "not_uploaded",
+
+    uploadedAt: doc.uploadedAt || doc.uploaded_at || null,
+    updatedAt: doc.updatedAt || doc.updated_at || doc.verified_at || null,
+
+    fileUrl: doc.fileUrl || doc.file_url || null,
+    fileUri: doc.fileUri || doc.fileUrl || doc.file_url || null,
+
+    fileType: doc.fileType || doc.file_type || doc.mimeType || null,
+    mimeType: doc.mimeType || doc.fileType || doc.file_type || null,
+
+    fileName: doc.fileName || doc.file_name || `${base?.title || "Document"}.pdf`,
+    fileSize: doc.fileSize || doc.file_size || null,
+
+    rejectionReason: doc.rejectionReason || doc.rejection_reason || null,
+  };
+};
+
+const mergeWithDocumentList = (docs = []) => {
+  const mapped = {};
+
+  docs.forEach((doc) => {
+    const normalized = normalizeDocument(doc);
+    if (normalized.id) {
+      mapped[normalized.id] = normalized;
+    }
+  });
+
+  return DOCUMENT_LIST.map((doc) => {
+    const uploaded = mapped[doc.id];
+
+    if (uploaded) {
+      return {
+        ...doc,
+        ...uploaded,
+        id: doc.id,
+        type: doc.type,
+        title: doc.title,
+        description: doc.description,
+        icon: doc.icon,
+        required: doc.required,
+      };
+    }
+
+    return {
+      id: doc.id,
+      type: doc.type,
+      title: doc.title,
+      description: doc.description,
+      icon: doc.icon,
+      required: doc.required,
+      status: "not_uploaded",
+      uploadedAt: null,
+      updatedAt: null,
+      fileUri: null,
+      fileUrl: null,
+      fileType: null,
+      mimeType: null,
+      fileName: null,
+      fileSize: null,
+      rejectionReason: null,
+    };
+  });
+};
 
 const documentService = {
   getDocuments: async (studentId) => {
     if (DEMO_MODE) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // ── FIX: Merge the static list with any docs already uploaded in this session
-      return DOCUMENT_LIST.map((doc) => {
-        // If the user already uploaded this doc, return the saved state
-        if (demoUploadedDocs.has(doc.id)) {
-          return demoUploadedDocs.get(doc.id);
-        }
-        // Otherwise return the default not_uploaded state
-        return {
-          id: doc.id,
-          type: doc.type,
-          title: doc.title,
-          description: doc.description,
-          icon: doc.icon,
-          required: doc.required,
-          status: "not_uploaded",
-          uploadedAt: null,
-          fileUri: null,
-          fileType: null,
-          fileSize: null,
-          rejectionReason: null,
-        };
-      });
+      return DOCUMENT_LIST.map((doc) => ({
+        id: doc.id,
+        type: doc.type,
+        title: doc.title,
+        description: doc.description,
+        icon: doc.icon,
+        required: doc.required,
+        status: "not_uploaded",
+        uploadedAt: null,
+        updatedAt: null,
+        fileUri: null,
+        fileUrl: null,
+        fileType: null,
+        mimeType: null,
+        fileSize: null,
+        rejectionReason: null,
+      }));
     }
 
     const endpoint = studentId
       ? `${API.ENDPOINTS.DOCUMENTS_LIST}?studentId=${studentId}`
       : API.ENDPOINTS.DOCUMENTS_LIST;
+
     const response = await api.get(endpoint);
-    return response;
+    const docs = Array.isArray(response) ? response : response?.data || [];
+    return mergeWithDocumentList(docs);
   },
 
   getDocumentById: async (documentId) => {
     if (DEMO_MODE) {
-      // ── FIX: Return uploaded state if available
-      if (demoUploadedDocs.has(documentId)) {
-        return demoUploadedDocs.get(documentId);
-      }
       const doc = DOCUMENT_LIST.find((d) => d.id === documentId);
       return {
         id: doc?.id || documentId,
@@ -61,65 +139,35 @@ const documentService = {
       };
     }
 
-    const response = await api.get(
-      `${API.ENDPOINTS.DOCUMENTS_LIST}/${documentId}`
-    );
-    return response;
+    const response = await api.get(`${API.ENDPOINTS.DOCUMENTS_LIST}/${documentId}`);
+    const doc = response?.data || response;
+    return normalizeDocument(doc);
   },
 
   uploadDocument: async (documentId, formData, onProgress) => {
     if (DEMO_MODE) {
-      // Simulate upload progress
       for (let i = 0; i <= 100; i += 20) {
         await new Promise((resolve) => setTimeout(resolve, 100));
         if (onProgress) onProgress(i);
       }
 
       const doc = DOCUMENT_LIST.find((d) => d.id === documentId);
-
-      // ── FIX: Extract the actual file URI from FormData so we can display it
-      let fileUri = null;
-      let fileType = null;
-      let fileName = null;
-      try {
-        // React Native FormData stores entries differently
-        const fileEntry = formData._parts?.find(([key]) => key === "file");
-        if (fileEntry) {
-          fileUri  = fileEntry[1]?.uri  || null;
-          fileType = fileEntry[1]?.type || null;
-          fileName = fileEntry[1]?.name || null;
-        }
-      } catch (e) {
-        // fallback — won't show preview but upload still registers
-      }
-
-      // ── FIX: Save uploaded doc to the persistent in-memory store
-      const uploadedDoc = {
-        id: documentId,
-        type: doc?.type,
-        title: doc?.title || "Document",
-        description: doc?.description,
-        icon: doc?.icon,
-        required: doc?.required,
-        status: "pending",
-        uploadedAt: new Date().toISOString(),
-        fileUri: fileUri,
-        fileType: fileType,
-        fileName: fileName,
-        fileSize: null,
-        rejectionReason: null,
-      };
-      demoUploadedDocs.set(documentId, uploadedDoc);
-
       return {
         success: true,
         message: "Document uploaded successfully (Demo)",
-        document: uploadedDoc,
+        document: {
+          id: documentId,
+          title: doc?.title || "Document",
+          status: "pending",
+          uploadedAt: new Date().toISOString(),
+          fileUri: "demo://uploaded/file.pdf",
+        },
       };
     }
 
-    // ── Real API ──────────────────────────────────────────────────────────────
     if (onProgress) {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
@@ -134,7 +182,7 @@ const documentService = {
           try {
             const data = JSON.parse(xhr.responseText);
             if (xhr.status >= 200 && xhr.status < 300) {
-              resolve(data);
+              resolve(data.document || data.data?.document || data.data || data);
             } else {
               reject(new Error(data?.message || "Upload failed."));
             }
@@ -150,6 +198,9 @@ const documentService = {
           `${API.BASE_URL}${API.ENDPOINTS.DOCUMENT_UPLOAD}/${documentId}`
         );
         xhr.setRequestHeader("Accept", "application/json");
+        if (token) {
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        }
         xhr.send(formData);
       });
     }
@@ -158,58 +209,26 @@ const documentService = {
       `${API.ENDPOINTS.DOCUMENT_UPLOAD}/${documentId}`,
       formData
     );
-    return response;
+    return response?.document || response?.data?.document || response?.data || response;
   },
 
   deleteDocument: async (documentId) => {
-    if (DEMO_MODE) {
-      // ── FIX: Remove from persistent store so it resets to not_uploaded
-      demoUploadedDocs.delete(documentId);
-      return { success: true, message: "Document deleted (Demo)" };
-    }
-
-    const response = await api.delete(
-      `${API.ENDPOINTS.DOCUMENTS_LIST}/${documentId}`
-    );
-    return response;
+    const response = await api.delete(`${API.ENDPOINTS.DOCUMENTS_LIST}/${documentId}`);
+    return response?.data || response;
   },
 
   getDocumentStatus: async (documentId) => {
-    if (DEMO_MODE) {
-      // ── FIX: Return real status from store if uploaded
-      if (demoUploadedDocs.has(documentId)) {
-        const doc = demoUploadedDocs.get(documentId);
-        return { status: doc.status, message: "Under review (Demo)" };
-      }
-      return { status: "not_uploaded", message: "Not uploaded yet (Demo)" };
-    }
-
-    const response = await api.get(
-      `${API.ENDPOINTS.DOCUMENT_STATUS}/${documentId}`
-    );
-    return response;
+    const response = await api.get(`${API.ENDPOINTS.DOCUMENT_STATUS}/${documentId}`);
+    return response?.data || response;
   },
 
   getAllDocumentStatuses: async (studentId) => {
-    if (DEMO_MODE) {
-      return DOCUMENT_LIST.map((doc) => ({
-        id: doc.id,
-        status: demoUploadedDocs.has(doc.id)
-          ? demoUploadedDocs.get(doc.id).status
-          : "not_uploaded",
-      }));
-    }
-
     const endpoint = studentId
       ? `${API.ENDPOINTS.DOCUMENT_STATUS}?studentId=${studentId}`
       : API.ENDPOINTS.DOCUMENT_STATUS;
-    const response = await api.get(endpoint);
-    return response;
-  },
 
-  // ── Helper: reset demo state (call on logout) ────────────────────────────────
-  resetDemoState: () => {
-    demoUploadedDocs.clear();
+    const response = await api.get(endpoint);
+    return response?.data || response;
   },
 };
 

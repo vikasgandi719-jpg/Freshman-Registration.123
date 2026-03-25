@@ -1,0 +1,591 @@
+import React, { useState } from 'react';
+import {
+  View, Text, StyleSheet, SafeAreaView, ScrollView,
+  TouchableOpacity, TextInput, Modal, Alert, Platform,
+} from 'react-native';
+import { useAdmin } from '../../context/AdminContext';
+import { BRANCHES } from '../../constants/branches';
+
+// ─── Team Data ────────────────────────────────────────────────────────────────
+const BRANCH_CODES = BRANCHES.map((b) => b.shortName);
+
+const generateTeam = () => {
+  const branchAdmins = BRANCHES.map((b, i) => ({
+    id: `ba_${i + 1}`,
+    name: `${b.shortName} Branch Admin`,
+    email: `${b.shortName.toLowerCase()}.admin@bvritn.ac.in`,
+    role: 'BRANCH ADMIN',
+    branch: b.shortName,
+    color: b.color,
+    active: true,
+  }));
+
+  const verificationOfficers = BRANCHES.flatMap((b, bi) =>
+    [1, 2, 3].map((n, i) => ({
+      id: `vo_${bi * 3 + i + 1}`,
+      name: `Verification Officer ${bi * 3 + i + 1}`,
+      email: `vo${bi * 3 + i + 1}@bvritn.ac.in`,
+      role: 'VERIFICATION OFFICER',
+      branch: b.shortName,
+      color: '#7C3AED',
+      active: true,
+    }))
+  );
+
+  const documentManagers = BRANCHES.flatMap((b, bi) =>
+    [1, 2].map((n, i) => ({
+      id: `dm_${bi * 2 + i + 1}`,
+      name: `Document Manager ${bi * 2 + i + 1}`,
+      email: `dm${bi * 2 + i + 1}@bvritn.ac.in`,
+      role: 'DOCUMENT MANAGER',
+      branch: b.shortName,
+      color: '#059669',
+      active: true,
+    }))
+  );
+
+  return { branchAdmins, verificationOfficers, documentManagers };
+};
+
+const initialTeam = generateTeam();
+
+// ─── Role config ──────────────────────────────────────────────────────────────
+const ROLE_CONFIG = {
+  'BRANCH ADMIN': {
+    label: 'BRANCH ADMIN',
+    badgeColor: '#F59E0B',
+    badgeBg:    '#FFFBEB',
+    icon:       '🏫',
+  },
+  'VERIFICATION OFFICER': {
+    label: 'VERIFICATION OFFICER',
+    badgeColor: '#7C3AED',
+    badgeBg:    '#F5F3FF',
+    icon:       '✅',
+  },
+  'DOCUMENT MANAGER': {
+    label: 'DOCUMENT MANAGER',
+    badgeColor: '#059669',
+    badgeBg:    '#F0FDF4',
+    icon:       '📄',
+  },
+};
+
+// ─── Member Card ──────────────────────────────────────────────────────────────
+const MemberCard = ({ member, onEdit, onToggle }) => (
+  <TouchableOpacity style={styles.memberCard} onPress={() => onEdit(member)} activeOpacity={0.8}>
+    <View style={[styles.memberAvatar, { backgroundColor: member.color + '20' }]}>
+      <Text style={[styles.memberAvatarText, { color: member.color }]}>
+        {member.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+      </Text>
+    </View>
+    <View style={styles.memberInfo}>
+      <Text style={styles.memberName}>{member.name}</Text>
+      <Text style={styles.memberEmail}>{member.email}</Text>
+    </View>
+    <View style={[styles.branchBadge, { borderColor: member.color + '40' }]}>
+      <Text style={[styles.branchBadgeText, { color: member.color }]}>{member.branch}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
+// ─── Section ─────────────────────────────────────────────────────────────────
+const TeamSection = ({ role, members, onEdit, onAdd, searchQuery }) => {
+  const config   = ROLE_CONFIG[role];
+  const filtered = members.filter(
+    (m) =>
+      !searchQuery ||
+      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.branch.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <View style={styles.section}>
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <View style={[styles.roleBadge, { backgroundColor: config.badgeBg }]}>
+          <Text style={[styles.roleBadgeText, { color: config.badgeColor }]}>
+            {config.label}
+          </Text>
+        </View>
+        <View style={[styles.countBadge, { backgroundColor: config.badgeBg }]}>
+          <Text style={[styles.countBadgeText, { color: config.badgeColor }]}>
+            {filtered.length}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.addBtn, { backgroundColor: config.badgeBg }]}
+          onPress={() => onAdd(role)}
+        >
+          <Text style={[styles.addBtnText, { color: config.badgeColor }]}>+ Add</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Members Grid */}
+      <View style={styles.memberGrid}>
+        {filtered.length === 0 ? (
+          <Text style={styles.emptyText}>No members found.</Text>
+        ) : (
+          filtered.map((member) => (
+            <View key={member.id} style={styles.memberGridItem}>
+              <MemberCard member={member} onEdit={onEdit} />
+            </View>
+          ))
+        )}
+      </View>
+    </View>
+  );
+};
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+const TeamScreen = ({ navigation }) => {
+  const { admin } = useAdmin();
+
+  const [team, setTeam]               = useState(initialTeam);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab]     = useState('all');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
+  const [addingRole, setAddingRole]     = useState(null);
+  const [form, setForm] = useState({ name: '', email: '', branch: BRANCH_CODES[0], role: 'BRANCH ADMIN' });
+
+  const allMembers = [
+    ...team.branchAdmins,
+    ...team.verificationOfficers,
+    ...team.documentManagers,
+  ];
+
+  const tabs = [
+    { id: 'all',                  label: 'All',          count: allMembers.length },
+    { id: 'BRANCH ADMIN',         label: 'Branch Admin', count: team.branchAdmins.length },
+    { id: 'VERIFICATION OFFICER', label: 'Verification', count: team.verificationOfficers.length },
+    { id: 'DOCUMENT MANAGER',     label: 'Doc Manager',  count: team.documentManagers.length },
+  ];
+
+  const getList = (role) => {
+    if (role === 'BRANCH ADMIN')         return team.branchAdmins;
+    if (role === 'VERIFICATION OFFICER') return team.verificationOfficers;
+    if (role === 'DOCUMENT MANAGER')     return team.documentManagers;
+    return [];
+  };
+
+  const setList = (role, list) => {
+    if (role === 'BRANCH ADMIN')         setTeam((t) => ({ ...t, branchAdmins: list }));
+    if (role === 'VERIFICATION OFFICER') setTeam((t) => ({ ...t, verificationOfficers: list }));
+    if (role === 'DOCUMENT MANAGER')     setTeam((t) => ({ ...t, documentManagers: list }));
+  };
+
+  const openEdit = (member) => {
+    setEditingMember(member);
+    setForm({ name: member.name, email: member.email, branch: member.branch, role: member.role });
+    setModalVisible(true);
+  };
+
+  const openAdd = (role) => {
+    setEditingMember(null);
+    setAddingRole(role);
+    setForm({ name: '', email: '', branch: BRANCH_CODES[0], role });
+    setModalVisible(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name.trim() || !form.email.trim()) {
+      if (Platform.OS === 'web') {
+        window.alert('Please fill in name and email.');
+      } else {
+        Alert.alert('Error', 'Please fill in name and email.');
+      }
+      return;
+    }
+
+    const roleConfig = ROLE_CONFIG[form.role];
+    const color = BRANCHES.find((b) => b.shortName === form.branch)?.color || '#1D4ED8';
+
+    if (editingMember) {
+      // Update existing
+      const list    = getList(editingMember.role);
+      const updated = list.map((m) =>
+        m.id === editingMember.id
+          ? { ...m, name: form.name.trim(), email: form.email.trim(), branch: form.branch, color }
+          : m
+      );
+      setList(editingMember.role, updated);
+    } else {
+      // Add new
+      const list   = getList(form.role);
+      const newMember = {
+        id:     `${form.role.toLowerCase().replace(/ /g, '_')}_${Date.now()}`,
+        name:   form.name.trim(),
+        email:  form.email.trim(),
+        role:   form.role,
+        branch: form.branch,
+        color,
+        active: true,
+      };
+      setList(form.role, [...list, newMember]);
+    }
+    setModalVisible(false);
+  };
+
+  const handleDelete = () => {
+    const doDelete = () => {
+      const list    = getList(editingMember.role);
+      const updated = list.filter((m) => m.id !== editingMember.id);
+      setList(editingMember.role, updated);
+      setModalVisible(false);
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove ${editingMember.name}?`)) doDelete();
+    } else {
+      Alert.alert('Remove Member', `Remove ${editingMember.name}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: doDelete },
+      ]);
+    }
+  };
+
+  const visibleRoles =
+    activeTab === 'all'
+      ? ['BRANCH ADMIN', 'VERIFICATION OFFICER', 'DOCUMENT MANAGER']
+      : [activeTab];
+
+  return (
+    <SafeAreaView style={styles.safe}>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>‹</Text>
+        </TouchableOpacity>
+        <View>
+          <Text style={styles.headerTitle}>Team</Text>
+          <Text style={styles.headerSub}>{allMembers.length} members</Text>
+        </View>
+      </View>
+
+      {/* Search */}
+      <View style={styles.searchBox}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name, branch, email..."
+          placeholderTextColor="#94A3B8"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Text style={styles.searchClear}>✕</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {/* Tabs */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll} contentContainerStyle={styles.tabs}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+            onPress={() => setActiveTab(tab.id)}
+          >
+            <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
+              {tab.label}
+            </Text>
+            <View style={[styles.tabCount, activeTab === tab.id && styles.tabCountActive]}>
+              <Text style={[styles.tabCountText, activeTab === tab.id && styles.tabCountTextActive]}>
+                {tab.count}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Content */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        {visibleRoles.map((role) => (
+          <TeamSection
+            key={role}
+            role={role}
+            members={getList(role)}
+            onEdit={openEdit}
+            onAdd={openAdd}
+            searchQuery={searchQuery}
+          />
+        ))}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+
+      {/* Add / Edit Modal */}
+      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+
+            <Text style={styles.modalTitle}>
+              {editingMember ? 'Edit Member' : `Add ${form.role}`}
+            </Text>
+
+            {/* Name */}
+            <Text style={styles.fieldLabel}>Full Name</Text>
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Enter full name"
+              value={form.name}
+              onChangeText={(t) => setForm((f) => ({ ...f, name: t }))}
+            />
+
+            {/* Email */}
+            <Text style={styles.fieldLabel}>Email</Text>
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Enter email"
+              value={form.email}
+              onChangeText={(t) => setForm((f) => ({ ...f, email: t }))}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            {/* Branch */}
+            <Text style={styles.fieldLabel}>Branch</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+              {BRANCH_CODES.map((code) => (
+                <TouchableOpacity
+                  key={code}
+                  style={[styles.branchChip, form.branch === code && styles.branchChipActive]}
+                  onPress={() => setForm((f) => ({ ...f, branch: code }))}
+                >
+                  <Text style={[styles.branchChipText, form.branch === code && styles.branchChipTextActive]}>
+                    {code}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Role (only when adding) */}
+            {!editingMember && (
+              <>
+                <Text style={styles.fieldLabel}>Role</Text>
+                <View style={styles.roleRow}>
+                  {Object.keys(ROLE_CONFIG).map((role) => (
+                    <TouchableOpacity
+                      key={role}
+                      style={[styles.roleChip, form.role === role && { backgroundColor: ROLE_CONFIG[role].badgeBg, borderColor: ROLE_CONFIG[role].badgeColor }]}
+                      onPress={() => setForm((f) => ({ ...f, role }))}
+                    >
+                      <Text style={[styles.roleChipText, form.role === role && { color: ROLE_CONFIG[role].badgeColor }]}>
+                        {ROLE_CONFIG[role].icon} {role.split(' ')[0]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {/* Buttons */}
+            <View style={styles.modalBtns}>
+              {editingMember && (
+                <TouchableOpacity style={styles.deleteBtnModal} onPress={handleDelete}>
+                  <Text style={styles.deleteBtnModalText}>Remove</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+                <Text style={styles.saveBtnText}>{editingMember ? 'Save' : 'Add'}</Text>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        </View>
+      </Modal>
+
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safe:        { flex: 1, backgroundColor: '#F8FAFC' },
+
+  header: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    paddingHorizontal: 16,
+    paddingVertical:  14,
+    backgroundColor:  '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 12,
+  },
+  backBtn:     { padding: 4 },
+  backBtnText: { fontSize: 28, color: '#1D4ED8', lineHeight: 32 },
+  headerTitle: { fontSize: 20, fontWeight: '800', color: '#0F172A' },
+  headerSub:   { fontSize: 12, color: '#94A3B8', marginTop: 1 },
+
+  searchBox: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    backgroundColor:  '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop:        12,
+    marginBottom:     8,
+    paddingHorizontal: 14,
+    paddingVertical:  10,
+    borderRadius:     12,
+    borderWidth:      1,
+    borderColor:      '#E2E8F0',
+    gap: 8,
+  },
+  searchIcon:  { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 14, color: '#1E293B' },
+  searchClear: { fontSize: 14, color: '#94A3B8', paddingHorizontal: 4 },
+
+  tabsScroll:  { flexGrow: 0 },
+  tabs:        { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
+  tab: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius:   20,
+    backgroundColor: '#F1F5F9',
+    gap: 6,
+  },
+  tabActive:        { backgroundColor: '#1D4ED8' },
+  tabText:          { fontSize: 13, color: '#64748B', fontWeight: '600' },
+  tabTextActive:    { color: '#FFFFFF' },
+  tabCount:         { backgroundColor: '#E2E8F0', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 },
+  tabCountActive:   { backgroundColor: 'rgba(255,255,255,0.25)' },
+  tabCountText:     { fontSize: 11, color: '#64748B', fontWeight: '700' },
+  tabCountTextActive:{ color: '#FFFFFF' },
+
+  content:     { paddingHorizontal: 16, paddingTop: 8 },
+
+  section:     { marginBottom: 20 },
+  sectionHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    marginBottom:   12,
+    gap:            8,
+  },
+  roleBadge:   { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  roleBadgeText:{ fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
+  countBadge:  { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20 },
+  countBadgeText:{ fontSize: 12, fontWeight: '700' },
+  addBtn:      { marginLeft: 'auto', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
+  addBtnText:  { fontSize: 12, fontWeight: '700' },
+
+  memberGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  memberGridItem:{ width: '48.5%' },
+
+  memberCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius:    12,
+    padding:         12,
+    borderWidth:     1,
+    borderColor:     '#F1F5F9',
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 1 },
+    shadowOpacity:   0.04,
+    shadowRadius:    4,
+    elevation:       1,
+  },
+  memberAvatar: {
+    width:           36,
+    height:          36,
+    borderRadius:    18,
+    justifyContent:  'center',
+    alignItems:      'center',
+    marginBottom:    8,
+  },
+  memberAvatarText: { fontSize: 13, fontWeight: '800' },
+  memberInfo:       { marginBottom: 6 },
+  memberName:       { fontSize: 13, fontWeight: '600', color: '#1E293B' },
+  memberEmail:      { fontSize: 10, color: '#94A3B8', marginTop: 2 },
+  branchBadge: {
+    alignSelf:       'flex-start',
+    borderWidth:     1,
+    borderRadius:    6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  branchBadgeText: { fontSize: 10, fontWeight: '700' },
+  emptyText:   { fontSize: 13, color: '#94A3B8', padding: 12 },
+
+  // Modal
+  modalOverlay: {
+    flex:            1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent:  'flex-end',
+  },
+  modalBox: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding:         24,
+    paddingBottom:   40,
+  },
+  modalTitle:  { fontSize: 18, fontWeight: '800', color: '#0F172A', marginBottom: 20 },
+  fieldLabel:  { fontSize: 12, fontWeight: '700', color: '#64748B', marginBottom: 6, marginTop: 4 },
+  fieldInput: {
+    borderWidth:     1,
+    borderColor:     '#E2E8F0',
+    borderRadius:    10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize:        14,
+    color:           '#1E293B',
+    marginBottom:    12,
+    backgroundColor: '#F8FAFC',
+  },
+  branchChip: {
+    paddingHorizontal: 12,
+    paddingVertical:  6,
+    borderRadius:     20,
+    backgroundColor:  '#F1F5F9',
+    marginRight:      8,
+    borderWidth:      1,
+    borderColor:      'transparent',
+  },
+  branchChipActive:    { backgroundColor: '#EFF6FF', borderColor: '#1D4ED8' },
+  branchChipText:      { fontSize: 12, fontWeight: '600', color: '#64748B' },
+  branchChipTextActive:{ color: '#1D4ED8' },
+  roleRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  roleChip: {
+    paddingHorizontal: 12,
+    paddingVertical:  6,
+    borderRadius:     20,
+    backgroundColor:  '#F1F5F9',
+    borderWidth:      1,
+    borderColor:      'transparent',
+  },
+  roleChipText:{ fontSize: 12, fontWeight: '600', color: '#64748B' },
+  modalBtns:   { flexDirection: 'row', gap: 10, marginTop: 8 },
+  deleteBtnModal: {
+    flex:            1,
+    paddingVertical: 13,
+    borderRadius:    12,
+    backgroundColor: '#FFF1F2',
+    alignItems:      'center',
+  },
+  deleteBtnModalText:{ fontSize: 14, fontWeight: '700', color: '#BE123C' },
+  cancelBtn: {
+    flex:            1,
+    paddingVertical: 13,
+    borderRadius:    12,
+    backgroundColor: '#F1F5F9',
+    alignItems:      'center',
+  },
+  cancelBtnText:{ fontSize: 14, fontWeight: '600', color: '#64748B' },
+  saveBtn: {
+    flex:            1,
+    paddingVertical: 13,
+    borderRadius:    12,
+    backgroundColor: '#1D4ED8',
+    alignItems:      'center',
+  },
+  saveBtnText:{ fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+});
+
+export default TeamScreen;
