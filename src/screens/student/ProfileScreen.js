@@ -153,14 +153,14 @@ const ProfileScreen = ({ navigation }) => {
           </>
         ))}
 
-        {/* EMACET Details Section */}
-        {renderSection("EMACET Details", () => (
+        {/* EAPCET Details Section */}
+        {renderSection("EAPCET Details", () => (
           <>
             {renderInfoRow(
               "Hall Ticket Number",
-              student.emacetHallTicket || "Not provided",
+              student.eapcetHallTicket || "Not provided",
             )}
-            {renderInfoRow("Rank", student.emacetRank || "Not provided")}
+            {renderInfoRow("Rank", student.eapcetRank || "Not provided")}
           </>
         ))}
 
@@ -259,19 +259,19 @@ const ProfileScreen = ({ navigation }) => {
             keyboardType="phone-pad"
           />
 
-          <Text style={styles.modalSectionTitle}>EMACET Details</Text>
+          <Text style={styles.modalSectionTitle}>EAPCET Details</Text>
           <Input
-            label="EMACET Hall Ticket Number"
-            value={editForm.emacetHallTicket}
+            label="EAPCET Hall Ticket Number"
+            value={editForm.eapcetHallTicket}
             onChangeText={(t) =>
-              setEditForm({ ...editForm, emacetHallTicket: t })
+              setEditForm({ ...editForm, eapcetHallTicket: t })
             }
             placeholder="Enter hall ticket number"
           />
           <Input
-            label="EMACET Rank"
-            value={editForm.emacetRank}
-            onChangeText={(t) => setEditForm({ ...editForm, emacetRank: t })}
+            label="EAPCET Rank"
+            value={editForm.eapcetRank}
+            onChangeText={(t) => setEditForm({ ...editForm, eapcetRank: t })}
             placeholder="Enter rank"
             keyboardType="numeric"
           />

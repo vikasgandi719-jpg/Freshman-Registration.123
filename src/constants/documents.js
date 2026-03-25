@@ -2,85 +2,97 @@
 export const DOCUMENT_TYPES = {
   PASSPORT_PHOTO: "passport_photo",
 
+  // Schooling — School
+  SCHOOL_MEMO:      "school_memo",
+  SCHOOL_BONAFIDE:  "school_bonafide",
+
+  // Schooling — Intermediate
+  INTER_HALL_TICKET: "inter_hall_ticket",
+  INTER_MEMO:        "inter_memo",
+  INTER_BONAFIDE:    "inter_bonafide",
+
   // 10th Documentation
   TENTH_HALL_TICKET: "tenth_hall_ticket",
-  TENTH_MEMO: "tenth_memo",
+  TENTH_MEMO:     "tenth_memo",
   TENTH_BONAFIDE: "tenth_bonafide",
 
-  // Inter Documentation
-  INTER_HALL_TICKET: "inter_hall_ticket",
-  INTER_MEMO: "inter_memo",
-  INTER_BONAFIDE: "inter_bonafide",
-
-  // EAPCET Documentation
+  // EAPCET
   EAPCET_HALL_TICKET: "eapcet_hall_ticket",
-  EAPCET_RANK_CARD: "eapcet_rank_card",
+  EAPCET_RANK_CARD:   "eapcet_rank_card",
+
+  // JEE Mains
+  JEE_HALL_TICKET: "jee_hall_ticket",
+  JEE_RANK_CARD:   "jee_rank_card",
 
   // Other
-  CASTE_CERTIFICATE: "caste_certificate",
+  CASTE_CERTIFICATE:  "caste_certificate",
   INCOME_CERTIFICATE: "income_certificate",
-  AADHAAR_CARD: "aadhar_card",
+  AADHAAR_CARD:       "aadhar_card",
 };
 
-// ─── Document Groups (matching mind map) ──────────────────────────────────────
+// ─── Document Groups ───────────────────────────────────────────────────────────
 export const DOCUMENT_GROUPS = {
-  TENTH: "10th Documentation",
-  INTER: "Inter Documentation",
-  EAPCET: "EAPCET Documentation",
-  OTHER: "Other Documents",
+  GENERAL:    "General",
+  SCHOOL:     "Schooling — School",
+  INTER:      "Schooling — Intermediate",
+  TENTH:      "10th Documentation",
+  EAPCET:     "EAPCET",
+  JEE:        "JEE Mains",
+  OTHER:      "Other Documents",
 };
 
 // ─── Full Document List ────────────────────────────────────────────────────────
 export const DOCUMENT_LIST = [
+  // ── General ─────────────────────────────────────────────────────────────────
   {
     id: "passport_photo",
     type: DOCUMENT_TYPES.PASSPORT_PHOTO,
     title: "Passport Size Photo",
     description: "Upload your passport size photo. Background must be white. Max file size: 200KB.",
     icon: "📷",
-    group: null,
+    group: DOCUMENT_GROUPS.GENERAL,
     required: true,
     allowedTypes: ["image/jpeg", "image/png"],
     maxSizeMB: 0.2,
     note: "Background must be white. Max size: 200KB",
   },
+  {
+    id: "aadhar_card",
+    type: DOCUMENT_TYPES.AADHAAR_CARD,
+    title: "Aadhaar Card",
+    description: "Aadhaar card (front and back)",
+    icon: "🪪",
+    group: DOCUMENT_GROUPS.GENERAL,
+    required: true,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+    maxSizeMB: 5,
+  },
 
-  // ── 10th Documentation ──────────────────────────────────────────────────────
+  // ── Schooling — School ───────────────────────────────────────────────────────
   {
-    id: "tenth_hall_ticket",
-    type: DOCUMENT_TYPES.TENTH_HALL_TICKET,
-    title: "10th Hall Ticket",
-    description: "SSC / 10th class hall ticket",
-    icon: "🎫",
-    group: DOCUMENT_GROUPS.TENTH,
-    required: true,
-    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
-    maxSizeMB: 5,
-  },
-  {
-    id: "tenth_memo",
-    type: DOCUMENT_TYPES.TENTH_MEMO,
-    title: "10th Memo",
-    description: "10th class marks memo / certificate",
+    id: "school_memo",
+    type: DOCUMENT_TYPES.SCHOOL_MEMO,
+    title: "School Memo",
+    description: "School marks memo / certificate",
     icon: "📜",
-    group: DOCUMENT_GROUPS.TENTH,
+    group: DOCUMENT_GROUPS.SCHOOL,
     required: true,
     allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
     maxSizeMB: 5,
   },
   {
-    id: "tenth_bonafide",
-    type: DOCUMENT_TYPES.TENTH_BONAFIDE,
-    title: "10th Bonafide Certificate",
+    id: "school_bonafide",
+    type: DOCUMENT_TYPES.SCHOOL_BONAFIDE,
+    title: "School Bonafide Certificate",
     description: "School bonafide certificate (Class 4–10)",
     icon: "🏫",
-    group: DOCUMENT_GROUPS.TENTH,
+    group: DOCUMENT_GROUPS.SCHOOL,
     required: true,
     allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
     maxSizeMB: 5,
   },
 
-  // ── Inter Documentation ─────────────────────────────────────────────────────
+  // ── Schooling — Intermediate ─────────────────────────────────────────────────
   {
     id: "inter_hall_ticket",
     type: DOCUMENT_TYPES.INTER_HALL_TICKET,
@@ -115,7 +127,42 @@ export const DOCUMENT_LIST = [
     maxSizeMB: 5,
   },
 
-  // ── EAPCET Documentation ────────────────────────────────────────────────────
+  // ── 10th Documentation ───────────────────────────────────────────────────────
+  {
+    id: "tenth_hall_ticket",
+    type: DOCUMENT_TYPES.TENTH_HALL_TICKET,
+    title: "10th Hall Ticket",
+    description: "10th / SSC class hall ticket",
+    icon: "🎫",
+    group: DOCUMENT_GROUPS.TENTH,
+    required: true,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+    maxSizeMB: 5,
+  },
+  {
+    id: "tenth_memo",
+    type: DOCUMENT_TYPES.TENTH_MEMO,
+    title: "10th Memo",
+    description: "10th / SSC marks memo",
+    icon: "📄",
+    group: DOCUMENT_GROUPS.TENTH,
+    required: true,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+    maxSizeMB: 5,
+  },
+  {
+    id: "tenth_bonafide",
+    type: DOCUMENT_TYPES.TENTH_BONAFIDE,
+    title: "10th Bonafide Certificate",
+    description: "Bonafide certificate for 10th class",
+    icon: "🏫",
+    group: DOCUMENT_GROUPS.TENTH,
+    required: true,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+    maxSizeMB: 5,
+  },
+
+  // ── EAPCET ───────────────────────────────────────────────────────────────────
   {
     id: "eapcet_hall_ticket",
     type: DOCUMENT_TYPES.EAPCET_HALL_TICKET,
@@ -139,7 +186,31 @@ export const DOCUMENT_LIST = [
     maxSizeMB: 5,
   },
 
-  // ── Other Documents ─────────────────────────────────────────────────────────
+  // ── JEE Mains ────────────────────────────────────────────────────────────────
+  {
+    id: "jee_hall_ticket",
+    type: DOCUMENT_TYPES.JEE_HALL_TICKET,
+    title: "JEE Mains Hall Ticket",
+    description: "JEE Mains admit card / hall ticket",
+    icon: "🎟️",
+    group: DOCUMENT_GROUPS.JEE,
+    required: false,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+    maxSizeMB: 5,
+  },
+  {
+    id: "jee_rank_card",
+    type: DOCUMENT_TYPES.JEE_RANK_CARD,
+    title: "JEE Mains Rank Card",
+    description: "JEE Mains result / rank card",
+    icon: "🏅",
+    group: DOCUMENT_GROUPS.JEE,
+    required: false,
+    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
+    maxSizeMB: 5,
+  },
+
+  // ── Other ────────────────────────────────────────────────────────────────────
   {
     id: "caste_certificate",
     type: DOCUMENT_TYPES.CASTE_CERTIFICATE,
@@ -162,37 +233,26 @@ export const DOCUMENT_LIST = [
     allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
     maxSizeMB: 2,
   },
-  {
-    id: "aadhar_card",
-    type: DOCUMENT_TYPES.AADHAAR_CARD,
-    title: "Aadhaar Card",
-    description: "Aadhaar card (front and back)",
-    icon: "🪪",
-    group: DOCUMENT_GROUPS.OTHER,
-    required: true,
-    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
-    maxSizeMB: 5,
-  },
 ];
 
 // ─── Status ────────────────────────────────────────────────────────────────────
 export const DOCUMENT_STATUS = {
   NOT_UPLOADED: "not_uploaded",
-  PENDING: "pending",
-  APPROVED: "approved",
-  REJECTED: "rejected",
+  PENDING:      "pending",
+  APPROVED:     "approved",
+  REJECTED:     "rejected",
 };
 
 export const DOCUMENT_STATUS_LABELS = {
   not_uploaded: "Not Uploaded",
-  pending: "Pending Review",
-  approved: "Approved",
-  rejected: "Rejected",
+  pending:      "Pending Review",
+  approved:     "Approved",
+  rejected:     "Rejected",
 };
 
 export const REQUIRED_DOCUMENTS = DOCUMENT_LIST.filter((d) => d.required);
 export const OPTIONAL_DOCUMENTS = DOCUMENT_LIST.filter((d) => !d.required);
 
-export const getDocumentById = (id) => DOCUMENT_LIST.find((d) => d.id === id) || null;
-export const getDocumentByType = (type) => DOCUMENT_LIST.find((d) => d.type === type) || null;
+export const getDocumentById     = (id)   => DOCUMENT_LIST.find((d) => d.id   === id)   || null;
+export const getDocumentByType   = (type) => DOCUMENT_LIST.find((d) => d.type === type) || null;
 export const getDocumentsByGroup = (group) => DOCUMENT_LIST.filter((d) => d.group === group);
