@@ -3,7 +3,7 @@ import { API, STORAGE_KEYS } from "../constants/config";
 import { DOCUMENT_LIST } from "../constants/documents";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 const normalizeDocument = (doc) => {
   const documentId =

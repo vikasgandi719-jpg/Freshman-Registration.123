@@ -4,7 +4,7 @@ import documentService from '../services/documentService';
 
 const useDocuments = () => {
   const context = useStudent();
-  const [uploading, setUploading]   = useState(false);
+  const [uploading, setUploading]     = useState(false);
   const [uploadError, setUploadError] = useState(null);
 
   // ─── Fetch Documents ─────────────────────────────────────────────────────────
@@ -24,8 +24,8 @@ const useDocuments = () => {
   }, [context]);
 
   // ─── Upload Document ─────────────────────────────────────────────────────────
-  const uploadDocument = useCallback(async (documentId, fileUri, fileType, fileName) => {
-    if (!documentId || !fileUri) {
+  const uploadDocument = useCallback(async (documentId, formData) => {
+    if (!documentId || !formData) {
       return { success: false, error: 'Invalid document or file.' };
     }
 
@@ -35,14 +35,6 @@ const useDocuments = () => {
     context.setUploadProgress(documentId, 0);
 
     try {
-      const formData = new FormData();
-      formData.append('file', {
-        uri:  fileUri,
-        type: fileType || 'application/pdf',
-        name: fileName || 'document',
-      });
-      formData.append('documentId', String(documentId));
-
       const response = await documentService.uploadDocument(
         documentId,
         formData,
@@ -51,7 +43,11 @@ const useDocuments = () => {
 
       context.setUploadProgress(documentId, 100);
       context.setUploadStatus(documentId, 'done');
-      context.updateDocument({ id: documentId, status: 'pending', fileUri, uploadedAt: new Date().toISOString() });
+      context.updateDocument({
+        id: documentId,
+        status: 'pending',
+        uploadedAt: new Date().toISOString(),
+      });
 
       return { success: true, data: response };
     } catch (error) {
@@ -96,13 +92,13 @@ const useDocuments = () => {
 
   return {
     // State
-    documents:       context.documents,
-    isLoading:       context.isLoading,
-    error:           context.error,
+    documents:        context.documents,
+    isLoading:        context.isLoading,
+    error:            context.error,
     uploading,
     uploadError,
-    documentStats:   context.documentStats,
-    pendingDocuments:context.pendingDocuments,
+    documentStats:    context.documentStats,
+    pendingDocuments: context.pendingDocuments,
 
     // Actions
     fetchDocuments,

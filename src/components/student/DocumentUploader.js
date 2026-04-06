@@ -12,7 +12,6 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  // 📁 Pick file
   const pickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -24,10 +23,7 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
 
       const file = result.assets[0];
 
-      // ⚠️ File size validation
-      const maxSize =
-        documentId === "photo" ? 200 * 1024 : 5 * 1024 * 1024;
-
+      const maxSize = documentId === "photo" ? 200 * 1024 : 5 * 1024 * 1024;
       if (file.size > maxSize) {
         alert(
           documentId === "photo"
@@ -43,7 +39,6 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
     }
   };
 
-  // 🚀 Upload file
   const handleUpload = async () => {
     if (!selectedFile) {
       alert("Please select a file first");
@@ -52,21 +47,12 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
 
     try {
       setUploading(true);
-
-      const formData = new FormData();
-      formData.append("file", {
-        uri: selectedFile.uri,
-        name: selectedFile.name || "file.jpg",
-        type: selectedFile.mimeType || "application/octet-stream",
-      });
-
-      await onUploadSuccess(formData, documentId);
-
+      // ✅ pass the full file object — let the screen handle FormData
+      await onUploadSuccess(selectedFile);
       setSelectedFile(null);
-      alert("Upload successful!");
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Upload failed");
+      alert("Upload failed: " + error.message);
     } finally {
       setUploading(false);
     }
@@ -74,21 +60,19 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
 
   return (
     <View style={styles.container}>
-      {/* File Name */}
       <Text style={styles.fileText}>
-        {selectedFile ? selectedFile.name : "No file uploaded yet"}
+        {selectedFile ? selectedFile.name : "No file selected yet"}
       </Text>
 
-      {/* Buttons */}
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.pickBtn} onPress={pickFile}>
           <Text style={styles.btnText}>Choose File</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.uploadBtn}
+          style={[styles.uploadBtn, !selectedFile && styles.uploadBtnDisabled]}
           onPress={handleUpload}
-          disabled={uploading}
+          disabled={uploading || !selectedFile}
         >
           {uploading ? (
             <ActivityIndicator color="#fff" />
@@ -103,32 +87,12 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
 
 export default DocumentUploader;
 
-// 🎨 Styles
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 10,
-  },
-  fileText: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 10,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  pickBtn: {
-    backgroundColor: "#ccc",
-    padding: 10,
-    borderRadius: 6,
-  },
-  uploadBtn: {
-    backgroundColor: "#2d6cdf",
-    padding: 10,
-    borderRadius: 6,
-  },
-  btnText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  container: { marginTop: 10 },
+  fileText: { fontSize: 14, color: "#666", marginBottom: 10 },
+  buttonRow: { flexDirection: "row", gap: 10 },
+  pickBtn: { backgroundColor: "#ccc", padding: 10, borderRadius: 6 },
+  uploadBtn: { backgroundColor: "#2d6cdf", padding: 10, borderRadius: 6 },
+  uploadBtnDisabled: { backgroundColor: "#93C5FD" },
+  btnText: { color: "#fff", fontWeight: "600" },
 });

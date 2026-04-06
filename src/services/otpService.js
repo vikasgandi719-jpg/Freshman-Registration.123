@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API, OTP } from "../constants/config";
 
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 const DEMO_OTP = "123456";
 
 const otpService = {

@@ -134,7 +134,20 @@ const DocumentUploadScreen = ({ navigation }) => {
 
   const handleUploadSuccess = async (file) => {
     if (selectedDoc) {
-      await uploadDocument(selectedDoc.id, file.uri, file.mimeType, file.name);
+      // ✅ Build FormData here where we have the full file object
+      const formData = new FormData();
+      if (file.file) {
+        // Web — expo-document-picker provides actual File object
+        formData.append("file", file.file);
+      } else {
+        // Native
+        formData.append("file", {
+          uri: file.uri,
+          name: file.name || "document.pdf",
+          type: file.mimeType || "application/octet-stream",
+        });
+      }
+      await uploadDocument(selectedDoc.id, formData);
       if (user?.id) fetchDocuments(user.id);
     }
     setUploadModal(false);

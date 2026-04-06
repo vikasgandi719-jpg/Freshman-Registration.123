@@ -11,7 +11,7 @@ export const APP = {
 
 // ─── API Configuration ────────────────────────────────────────────────────────
 export const API = {
-  BASE_URL: "http://localhost:5000/v1", // replace with real URL
+  BASE_URL: "http://localhost:5000/api", // replace with real URL
   TIMEOUT: 15000, // 15 seconds
   RETRY_COUNT: 3,
 

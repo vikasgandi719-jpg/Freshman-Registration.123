@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../constants/config";
+import { setTokenCache, clearTokenCache } from "../services/api";
 
 // ─── Initial State ─────────────────────────────────────────────────────────────
 const initialState = {
@@ -84,9 +85,31 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Don't restore session on app start - always start from beginning
+  // ✅ Restore session from AsyncStorage on app start
   useEffect(() => {
-    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+    const restoreSession = async () => {
+      try {
+        const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+
+        if (token && userData) {
+          setTokenCache(token); // ✅ warm memory cache immediately
+          dispatch({
+            type: AUTH_ACTIONS.RESTORE_SESSION,
+            payload: {
+              token,
+              user: JSON.parse(userData),
+            },
+          });
+        } else {
+          dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+        }
+      } catch (_) {
+        dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+      }
+    };
+
+    restoreSession();
   }, []);
 
   // ─── Actions ────────────────────────────────────────────────────────────────
@@ -94,6 +117,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+      setTokenCache(token); // ✅ cache token in memory immediately
       dispatch({ type: AUTH_ACTIONS.LOGIN_SUCCESS, payload: { user, token } });
     } catch (error) {
       dispatch({
@@ -105,12 +129,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      clearTokenCache(); // ✅ clear memory cache
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.AUTH_TOKEN,
         STORAGE_KEYS.USER_DATA,
         STORAGE_KEYS.APP_STARTED,
       ]);
-      // Also clear student profile data
       const { studentService } = await import("../services/studentService");
       await studentService.resetProfile();
     } catch (_) {}

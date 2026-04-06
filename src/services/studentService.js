@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "./api";
 import { API } from "../constants/config";
 
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 const PROFILE_STORAGE_KEY = "@student_profile_data";
 
 let storedProfile = null;

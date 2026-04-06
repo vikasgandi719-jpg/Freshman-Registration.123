@@ -3,7 +3,7 @@ import { API } from '../constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../constants/config';
 
-const ADMIN_DEMO_MODE     = true;
+const ADMIN_DEMO_MODE     = false;
 const DEMO_ADMIN_EMAIL    = 'admin@bvritn.ac.in';
 const DEMO_ADMIN_PASSWORD = 'admin@123';
 
