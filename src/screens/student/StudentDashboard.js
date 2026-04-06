@@ -14,6 +14,8 @@ import { SCREENS }       from "../../constants/config";
 import studentService    from "../../services/studentService";
 
 const MEDIUM_OPTIONS = ["English", "Telugu", "Urdu", "Hindi"];
+const SCHOOL_BOARD_OPTIONS = ["SSC", "CBSE", "IGCSE"];
+const INTER_BOARD_OPTIONS  = ["SSC", "CBSE"];
 
 // ─── Small reusable pieces ─────────────────────────────────────────────────────
 const DetailRow = ({ label, value }) => (
@@ -97,16 +99,21 @@ const StudentDashboard = ({ navigation }) => {
   });
   const openSchool = () => open("school", {
     schoolName: student.schoolName || "", schoolMedium: student.schoolMedium || "",
+    schoolBoard: student.schoolBoard || "",
   });
   const openInter  = () => open("inter", {
+    interCollegeName: student.interCollegeName || "",
     interHallTicket: student.interHallTicket || "",
     interPercentage: student.interPercentage || "",
     interMedium:     student.interMedium     || "",
+    interBoard:      student.interBoard      || "",
   });
   const openTenth  = () => open("tenth", {
+    tenthSchoolName: student.tenthSchoolName || "",
     tenthHallTicket: student.tenthHallTicket || "",
     tenthPercentage: student.tenthPercentage || "",
     tenthMedium:     student.tenthMedium     || "",
+    tenthBoard:      student.tenthBoard      || "",
   });
   const openEapcet = () => open("eapcet", {
     eapcetHallTicket: student.eapcetHallTicket || "",
@@ -196,6 +203,22 @@ const StudentDashboard = ({ navigation }) => {
       <Text style={styles.modalLabel}>Medium of Instruction</Text>
       <View style={styles.pillRow}>
         {MEDIUM_OPTIONS.map((opt) => (
+          <TouchableOpacity key={opt}
+            style={[styles.pill, editForm[field] === opt && styles.pillActive]}
+            onPress={() => setEditForm({ ...editForm, [field]: opt })}>
+            <Text style={[styles.pillText, editForm[field] === opt && styles.pillTextActive]}>{opt}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </>
+  );
+
+  // ── Board pills (for edit modals) ─────────────────────────────────────────
+  const BoardPills = ({ field, options }) => (
+    <>
+      <Text style={styles.modalLabel}>Board</Text>
+      <View style={styles.pillRow}>
+        {options.map((opt) => (
           <TouchableOpacity key={opt}
             style={[styles.pill, editForm[field] === opt && styles.pillActive]}
             onPress={() => setEditForm({ ...editForm, [field]: opt })}>
@@ -299,7 +322,7 @@ const StudentDashboard = ({ navigation }) => {
 
         {/* ── Schooling ────────────────────────────────────────────────────── */}
         <View style={styles.card}>
-          <CardHeader title="🏫 Schooling" />
+          <CardHeader title="🏫 Schooling (1 to 9 Class)" />
 
           {/* School sub-section */}
           <View style={styles.subSection}>
@@ -309,10 +332,10 @@ const StudentDashboard = ({ navigation }) => {
             </View>
             <View style={styles.grid}>
               <DetailRow label="School Name" value={student.schoolName}   />
+              <DetailRow label="Board"       value={student.schoolBoard}  />
               <DetailRow label="Medium"      value={student.schoolMedium} />
             </View>
             <DocSection title="Upload Certificates" />
-            <DocRow docId="school_memo"     title="School Memo"              />
             <DocRow docId="school_bonafide" title="School Bonafide Certificate" />
           </View>
 
@@ -323,6 +346,8 @@ const StudentDashboard = ({ navigation }) => {
               <TouchableOpacity onPress={openInter}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
             </View>
             <View style={styles.grid}>
+              <DetailRow label="College Name"    value={student.interCollegeName} />
+              <DetailRow label="Board"           value={student.interBoard}       />
               <DetailRow label="Hall Ticket No." value={student.interHallTicket} />
               <DetailRow label="Percentage"      value={student.interPercentage ? `${student.interPercentage}%` : undefined} />
               <DetailRow label="Medium"          value={student.interMedium}     />
@@ -338,12 +363,13 @@ const StudentDashboard = ({ navigation }) => {
         <View style={styles.card}>
           <CardHeader title="📄 10th Documentation" onEdit={openTenth} />
           <View style={styles.grid}>
+            <DetailRow label="School Name"    value={student.tenthSchoolName} />
+            <DetailRow label="Board"          value={student.tenthBoard}      />
             <DetailRow label="Hall Ticket No." value={student.tenthHallTicket} />
             <DetailRow label="Percentage" value={student.tenthPercentage ? `${student.tenthPercentage}%` : undefined} />
             <DetailRow label="Medium"     value={student.tenthMedium} />
           </View>
           <DocSection title="Upload Certificates" />
-          <DocRow docId="tenth_hall_ticket" title="10th Hall Ticket"          />
           <DocRow docId="tenth_memo"        title="10th Memo"                 />
           <DocRow docId="tenth_bonafide"    title="10th Bonafide Certificate" />
         </View>
@@ -384,10 +410,10 @@ const StudentDashboard = ({ navigation }) => {
           <CardHeader title="👨‍👩‍👦 Parent Details" onEdit={openParent} />
           <View style={styles.grid}>
             <DetailRow label="Father's Name"       value={student.fatherName}       />
-            <DetailRow label="Father's Phone"      value={student.fatherPhone}      />
+            <DetailRow label="Father's Mobile"     value={student.fatherPhone}      />
             <DetailRow label="Father's Profession" value={student.fatherProfession} />
             <DetailRow label="Mother's Name"       value={student.motherName}       />
-            <DetailRow label="Mother's Phone"      value={student.motherPhone}      />
+            <DetailRow label="Mother's Mobile"     value={student.motherPhone}      />
             <DetailRow label="Mother's Profession" value={student.motherProfession} />
           </View>
         </View>
@@ -500,6 +526,7 @@ const StudentDashboard = ({ navigation }) => {
       <Modal visible={modals.school} onClose={() => closeModal("school")} title="Edit School Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
           <Input label="School Name" value={editForm.schoolName} onChangeText={(t) => setEditForm({ ...editForm, schoolName: t })} placeholder="e.g. Narayana High School" />
+          <BoardPills field="schoolBoard" options={SCHOOL_BOARD_OPTIONS} />
           <MediumPills field="schoolMedium" />
           <SaveBtn modalKey="school" />
         </ScrollView>
@@ -508,6 +535,8 @@ const StudentDashboard = ({ navigation }) => {
       {/* Intermediate */}
       <Modal visible={modals.inter} onClose={() => closeModal("inter")} title="Edit Intermediate Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
+          <Input label="College Name"    value={editForm.interCollegeName} onChangeText={(t) => setEditForm({ ...editForm, interCollegeName: t })} placeholder="e.g. Narayana Junior College" />
+          <BoardPills field="interBoard" options={INTER_BOARD_OPTIONS} />
           <Input label="Hall Ticket No." value={editForm.interHallTicket} onChangeText={(t) => setEditForm({ ...editForm, interHallTicket: t.toUpperCase() })} placeholder="e.g. IHT2024XXXXX" autoCapitalize="characters" />
           <Input label="Percentage (%)"  value={editForm.interPercentage} onChangeText={(t) => setEditForm({ ...editForm, interPercentage: t })}               placeholder="e.g. 96.0" keyboardType="numeric" />
           <MediumPills field="interMedium" />
@@ -518,6 +547,8 @@ const StudentDashboard = ({ navigation }) => {
       {/* 10th */}
       <Modal visible={modals.tenth} onClose={() => closeModal("tenth")} title="Edit 10th Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
+          <Input label="School Name"     value={editForm.tenthSchoolName}  onChangeText={(t) => setEditForm({ ...editForm, tenthSchoolName: t })}  placeholder="e.g. ZP High School" />
+          <BoardPills field="tenthBoard" options={SCHOOL_BOARD_OPTIONS} />
           <Input label="10th Hall Ticket Number" value={editForm.tenthHallTicket} onChangeText={(t) => setEditForm({ ...editForm, tenthHallTicket: t.toUpperCase() })} placeholder="e.g. AP12345678" autoCapitalize="characters" />
           <Input label="Percentage (%)" value={editForm.tenthPercentage} onChangeText={(t) => setEditForm({ ...editForm, tenthPercentage: t })} placeholder="e.g. 95.5" keyboardType="numeric" />
           <MediumPills field="tenthMedium" />
@@ -548,10 +579,10 @@ const StudentDashboard = ({ navigation }) => {
       <Modal visible={modals.parent} onClose={() => closeModal("parent")} title="Edit Parent Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
           <Input label="Father's Name"       value={editForm.fatherName}       onChangeText={(t) => setEditForm({ ...editForm, fatherName: t })}       placeholder="Father's name" />
-          <Input label="Father's Phone"      value={editForm.fatherPhone}      onChangeText={(t) => setEditForm({ ...editForm, fatherPhone: t })}      placeholder="Father's phone" keyboardType="phone-pad" />
+          <Input label="Father's Mobile"     value={editForm.fatherPhone}      onChangeText={(t) => setEditForm({ ...editForm, fatherPhone: t })}      placeholder="Father's mobile" keyboardType="phone-pad" />
           <Input label="Father's Profession" value={editForm.fatherProfession} onChangeText={(t) => setEditForm({ ...editForm, fatherProfession: t })} placeholder="e.g. Farmer, Teacher" />
           <Input label="Mother's Name"       value={editForm.motherName}       onChangeText={(t) => setEditForm({ ...editForm, motherName: t })}       placeholder="Mother's name" />
-          <Input label="Mother's Phone"      value={editForm.motherPhone}      onChangeText={(t) => setEditForm({ ...editForm, motherPhone: t })}      placeholder="Mother's phone" keyboardType="phone-pad" />
+          <Input label="Mother's Mobile"     value={editForm.motherPhone}      onChangeText={(t) => setEditForm({ ...editForm, motherPhone: t })}      placeholder="Mother's mobile" keyboardType="phone-pad" />
           <Input label="Mother's Profession" value={editForm.motherProfession} onChangeText={(t) => setEditForm({ ...editForm, motherProfession: t })} placeholder="e.g. Housewife, Teacher" />
           <SaveBtn modalKey="parent" />
         </ScrollView>

@@ -23,11 +23,10 @@ const DOC_GROUPS = [
   },
   {
     key: 'school',
-    title: '🏫 Schooling — School',
+    title: '🏫 Schooling (1 to 9 Class)',
     color: '#0369A1',
     bg: '#F0F9FF',
     docs: [
-      { id: 'school_memo',     title: 'School Memo',              required: true  },
       { id: 'school_bonafide', title: 'School Bonafide Certificate', required: true },
     ],
   },
@@ -48,7 +47,6 @@ const DOC_GROUPS = [
     color: '#0F766E',
     bg: '#F0FDFA',
     docs: [
-      { id: 'tenth_hall_ticket', title: '10th Hall Ticket',           required: true  },
       { id: 'tenth_memo',        title: '10th Memo',                  required: true  },
       { id: 'tenth_bonafide',    title: '10th Bonafide Certificate',  required: true  },
     ],
@@ -297,7 +295,6 @@ const styles = StyleSheet.create({
   topTitle:    { fontSize: 22, fontWeight: '800', color: '#0F172A' },
   topSubtitle: { fontSize: 13, color: '#64748B', marginTop: 2 },
 
-  // Stats
   statsRow: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -314,7 +311,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 16, fontWeight: '800' },
   statLabel: { fontSize: 9, color: '#64748B', marginTop: 1, fontWeight: '500', textAlign: 'center' },
 
-  // Info banner
   infoBanner: {
     flexDirection: 'row', alignItems: 'flex-start',
     backgroundColor: '#EFF6FF', marginHorizontal: 16, marginTop: 12,
@@ -326,7 +322,6 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingTop: 8, paddingHorizontal: 16 },
 
-  // Group card
   groupCard: {
     backgroundColor: '#FFFFFF', borderRadius: 14,
     marginTop: 12, overflow: 'hidden',
@@ -346,13 +341,11 @@ const styles = StyleSheet.create({
   groupProgressText: { fontSize: 13, fontWeight: '700' },
   groupDoneCheck:    { fontSize: 14, color: '#15803D', fontWeight: '800' },
 
-  // Progress bar
   progressBarBg:   { height: 3, backgroundColor: '#E2E8F0' },
   progressBarFill: { height: 3, borderRadius: 2 },
 
   groupDocs: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 8 },
 
-  // Doc row
   docRow: {
     flexDirection: 'row', alignItems: 'center',
     padding: 12, borderRadius: 10,

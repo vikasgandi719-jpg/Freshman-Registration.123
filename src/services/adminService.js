@@ -2,12 +2,10 @@ import api from './api';
 import { API } from '../constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../constants/config';
+import { CREDENTIALS_MAP } from '../constants/demoCredentials';
 
-const ADMIN_DEMO_MODE     = true;
-const DEMO_ADMIN_EMAIL    = 'admin@bvritn.ac.in';
-const DEMO_ADMIN_PASSWORD = 'admin@123';
+const ADMIN_DEMO_MODE = true;
 
-// ─── Shared demo student store (exported so authService can write to it) ──────
 export const demoStudentStore = new Map();
 
 export const addDemoStudent = (studentData) => {
@@ -31,19 +29,47 @@ export const addDemoStudent = (studentData) => {
   return student;
 };
 
+const ROLE_DISPLAY = {
+  super_admin:          'Super Admin',
+  principal:            'Principal',
+  branch_manager:       'Branch Manager',
+  verification_officer: 'Verification Officer',
+  document_officer:     'Document Officer',
+};
+
 const adminService = {
 
   adminLogin: async (email, password) => {
     if (ADMIN_DEMO_MODE) {
-      await new Promise((r) => setTimeout(r, 1000));
-      if (!email || !password) throw new Error('Please enter email and password');
-      if (email.trim().toLowerCase() !== DEMO_ADMIN_EMAIL || password !== DEMO_ADMIN_PASSWORD)
-        throw new Error('Invalid admin credentials');
+      await new Promise((r) => setTimeout(r, 900));
+
+      if (!email || !password) {
+        throw new Error('Please enter email and password');
+      }
+
+      const key  = email.trim().toLowerCase();
+      const cred = CREDENTIALS_MAP[key];
+
+      if (!cred || cred.password !== password.trim()) {
+        throw new Error('Invalid credentials. Please check your email and password.');
+      }
+
+      const admin = {
+        id:      `${cred.roleKey}_${key.replace(/[@.]/g, '_')}`,
+        name:    cred.name,
+        email:   cred.email,
+        role:    ROLE_DISPLAY[cred.roleKey] || cred.role,
+        roleKey: cred.roleKey,
+        branch:  cred.branch,
+        note:    cred.note || '',
+      };
+
       return {
-        admin: { id: 'admin_001', name: 'Super Admin', email: DEMO_ADMIN_EMAIL, role: 'Super Admin' },
-        token: 'demo_admin_token_' + Date.now(),
+        admin,
+        token: `demo_${cred.roleKey}_token_${Date.now()}`,
       };
     }
+
     const response = await api.post(API.ENDPOINTS.ADMIN_LOGIN, { email, password });
     if (response.token) await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
     return response;

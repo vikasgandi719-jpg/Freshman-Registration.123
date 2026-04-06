@@ -63,7 +63,7 @@ const StartingScreen = ({ navigation }) => {
 
         {/* Title */}
         <Text style={styles.appName}>Freshman Registration</Text>
-        <Text style={styles.collegeName}>B V Raju Institue of Technology,Naraspur</Text>
+        <Text style={styles.collegeName}>B V Raju Institue of Technology, Naraspur</Text>
         <Text style={styles.tagline}>
           {/* Streamlined document verification{"\n"}for students and administrators */}
         </Text>

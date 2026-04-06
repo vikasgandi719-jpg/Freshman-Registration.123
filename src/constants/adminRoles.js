@@ -1,37 +1,38 @@
 export const ADMIN_ROLES = {
-  SUPER_ADMIN: "super_admin",
-  BRANCH_ADMIN: "branch_admin",
-  VERIFICATION_OFFICER: "verification_officer",
-  DOCUMENT_OFFICER: "document_officer",
-  VERIFIER: "verifier",
-  VIEWER: "viewer",
+  SUPER_ADMIN:           "super_admin",
+  PRINCIPAL:             "principal",
+  BRANCH_MANAGER:        "branch_manager",
+  VERIFICATION_OFFICER:  "verification_officer",
+  OFFICER:               "officer",
 };
 
 export const ADMIN_ROLE_LABELS = {
-  super_admin: "Super Admin",
-  branch_admin: "Branch Admin",
+  super_admin:          "Super Admin",
+  principal:            "Principal",
+  branch_manager:       "Branch Manager",
   verification_officer: "Verification Officer",
-  document_officer: "Document Officer",
-  verifier: "Verifier",
-  viewer: "Viewer",
+  officer:              "Officer",
 };
 
 export const ADMIN_ROLE_DESCRIPTIONS = {
-  super_admin: "Full access to all features, branches, and settings.",
-  branch_admin: "Manage students and documents within assigned branch.",
-  verification_officer: "Can verify and reject student documents.",
-  document_officer: "Can manage and upload student documents.",
-  verifier: "Can verify and reject student documents.",
-  viewer: "Read-only access to student records.",
+  super_admin:
+    "Full access to all features, branches, and settings.",
+  principal:
+    "Institution head with read-only visibility across all branches and reports. Does not perform direct document operations or approvals.",
+  branch_manager:
+    "Manages and monitors all student applications within their assigned branch. Cannot access other branches.",
+  verification_officer:
+    "Reviews OCR-extracted data, flags mismatches, and marks documents as verified or requiring resubmission. Cannot approve or reject student profiles.",
+  officer:
+    "Manages physical and digital document repository. Ensures all required documents are received and catalogued. No access to approval functions.",
 };
 
 export const ADMIN_ROLE_COLORS = {
-  super_admin: { bg: "#EFF6FF", text: "#1D4ED8", dot: "#3B82F6" },
-  branch_admin: { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E" },
+  super_admin:          { bg: "#EFF6FF", text: "#1D4ED8", dot: "#3B82F6" },
+  principal:            { bg: "#F5F3FF", text: "#6D28D9", dot: "#8B5CF6" },
+  branch_manager:       { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E" },
   verification_officer: { bg: "#FFF7ED", text: "#C2410C", dot: "#F97316" },
-  document_officer: { bg: "#FEF3C7", text: "#B45309", dot: "#FBBF24" },
-  verifier: { bg: "#FFF7ED", text: "#C2410C", dot: "#F97316" },
-  viewer: { bg: "#F8FAFC", text: "#64748B", dot: "#94A3B8" },
+  officer:              { bg: "#FDF4FF", text: "#86198F", dot: "#D946EF" },
 };
 
 export const ADMIN_PERMISSIONS = {
@@ -39,32 +40,50 @@ export const ADMIN_PERMISSIONS = {
     "view_all_students",
     "edit_all_students",
     "verify_documents",
+    "flag_documents",
+    "request_resubmission",
     "reject_documents",
+    "approve_student",
+    "reject_student",
     "manage_branches",
     "manage_admins",
     "view_reports",
+    "view_cross_branch_reports",
     "export_data",
     "manage_settings",
+    "view_document_repository",
+    "manage_document_repository",
+    "add_verification_notes",
   ],
-  branch_admin: [
+  principal: [
+    "view_all_students",
+    "view_cross_branch_reports",
+    "view_reports",
+    "export_data",
+  ],
+  branch_manager: [
     "view_branch_students",
     "edit_branch_students",
-    "verify_documents",
-    "reject_documents",
+    "view_branch_verification_status",
+    "view_branch_document_status",
     "view_reports",
+    "coordinate_branch_workflow",
   ],
   verification_officer: [
     "view_branch_students",
+    "review_ocr_data",
+    "flag_documents",
     "verify_documents",
-    "reject_documents",
+    "request_resubmission",
+    "add_verification_notes",
   ],
-  document_officer: [
+  officer: [
     "view_branch_students",
-    "upload_documents",
-    "edit_documents",
+    "view_document_repository",
+    "manage_document_repository",
+    "request_resubmission",
+    "catalogue_documents",
   ],
-  verifier: ["view_branch_students", "verify_documents", "reject_documents"],
-  viewer: ["view_branch_students"],
 };
 
 export const hasPermission = (role, permission) => {
@@ -77,6 +96,6 @@ export const ADMIN_ROLE_LIST = Object.entries(ADMIN_ROLE_LABELS).map(
     value,
     label,
     description: ADMIN_ROLE_DESCRIPTIONS[value],
-    color: ADMIN_ROLE_COLORS[value],
+    color:       ADMIN_ROLE_COLORS[value],
   }),
 );

@@ -2,8 +2,7 @@
 export const DOCUMENT_TYPES = {
   PASSPORT_PHOTO: "passport_photo",
 
-  // Schooling — School
-  SCHOOL_MEMO:      "school_memo",
+  // Schooling (1 to 9 Class)
   SCHOOL_BONAFIDE:  "school_bonafide",
 
   // Schooling — Intermediate
@@ -12,7 +11,6 @@ export const DOCUMENT_TYPES = {
   INTER_BONAFIDE:    "inter_bonafide",
 
   // 10th Documentation
-  TENTH_HALL_TICKET: "tenth_hall_ticket",
   TENTH_MEMO:     "tenth_memo",
   TENTH_BONAFIDE: "tenth_bonafide",
 
@@ -33,7 +31,7 @@ export const DOCUMENT_TYPES = {
 // ─── Document Groups ───────────────────────────────────────────────────────────
 export const DOCUMENT_GROUPS = {
   GENERAL:    "General",
-  SCHOOL:     "Schooling — School",
+  SCHOOL:     "Schooling (1 to 9 Class)",
   INTER:      "Schooling — Intermediate",
   TENTH:      "10th Documentation",
   EAPCET:     "EAPCET",
@@ -68,23 +66,12 @@ export const DOCUMENT_LIST = [
     maxSizeMB: 5,
   },
 
-  // ── Schooling — School ───────────────────────────────────────────────────────
-  {
-    id: "school_memo",
-    type: DOCUMENT_TYPES.SCHOOL_MEMO,
-    title: "School Memo",
-    description: "School marks memo / certificate",
-    icon: "📜",
-    group: DOCUMENT_GROUPS.SCHOOL,
-    required: true,
-    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
-    maxSizeMB: 5,
-  },
+  // ── Schooling (1 to 9 Class) ─────────────────────────────────────────────────
   {
     id: "school_bonafide",
     type: DOCUMENT_TYPES.SCHOOL_BONAFIDE,
     title: "School Bonafide Certificate",
-    description: "School bonafide certificate (Class 4–10)",
+    description: "School bonafide certificate (Class 1–9)",
     icon: "🏫",
     group: DOCUMENT_GROUPS.SCHOOL,
     required: true,
@@ -128,17 +115,6 @@ export const DOCUMENT_LIST = [
   },
 
   // ── 10th Documentation ───────────────────────────────────────────────────────
-  {
-    id: "tenth_hall_ticket",
-    type: DOCUMENT_TYPES.TENTH_HALL_TICKET,
-    title: "10th Hall Ticket",
-    description: "10th / SSC class hall ticket",
-    icon: "🎫",
-    group: DOCUMENT_GROUPS.TENTH,
-    required: true,
-    allowedTypes: ["application/pdf", "image/jpeg", "image/png"],
-    maxSizeMB: 5,
-  },
   {
     id: "tenth_memo",
     type: DOCUMENT_TYPES.TENTH_MEMO,
