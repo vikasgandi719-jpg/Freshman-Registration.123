@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from "react";
 import {
   View,
@@ -8,20 +9,36 @@ import {
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { UPLOAD } from "../../constants/config";
+=======
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+>>>>>>> c27836c8543bb82f81e1890a9b2bfc65248491d7
 
-const DocumentUploader = ({ documentId, onUploadSuccess }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-  const pickFile = async () => {
+const DocumentUploader = ({
+  documentTitle,
+  documentId,
+  existingFileUri,
+  onUploadSuccess,
+  onUploadError,
+}) => {
+  const [isPicking, setIsPicking] = useState(false);
+
+  const handleUpload = async () => {
     try {
+      setIsPicking(true);
+
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "application/pdf"],
+        type: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
         copyToCacheDirectory: true,
+        multiple: false,
       });
 
-      if (result.canceled) return;
+      console.log('DocumentPicker result:', result);
 
+<<<<<<< HEAD
       const file = result.assets[0];
 
       const maxSize =
@@ -34,69 +51,132 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
             ? `Photo must be under ${UPLOAD.MAX_PHOTO_SIZE_MB}MB`
             : `File must be under ${UPLOAD.MAX_FILE_SIZE_MB}MB`
         );
+=======
+      if (result.canceled) {
+        setIsPicking(false);
+>>>>>>> c27836c8543bb82f81e1890a9b2bfc65248491d7
         return;
       }
 
-      setSelectedFile(file);
-    } catch (error) {
-      console.error("File pick error:", error);
-    }
-  };
+      const asset = result.assets?.[0];
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      alert("Please select a file first");
-      return;
-    }
+      console.log('Picked asset:', asset);
+      console.log('asset?.uri:', asset?.uri);
+      console.log('asset?.name:', asset?.name);
+      console.log('asset?.mimeType:', asset?.mimeType);
+      console.log('asset?.size:', asset?.size);
+      console.log('asset?.file:', asset?.file);
+      console.log('asset.file instanceof File:', asset?.file instanceof File);
 
-    try {
-      setUploading(true);
-      // ✅ pass the full file object — let the screen handle FormData
-      await onUploadSuccess(selectedFile);
-      setSelectedFile(null);
+      if (!asset) {
+        throw new Error('No file selected.');
+      }
+
+      if (asset.size && asset.size > MAX_FILE_SIZE) {
+        throw new Error('File size should be less than 5MB.');
+      }
+
+      // ✅ On web, we must pass the actual browser File object
+      if (typeof window !== 'undefined') {
+        if (!(asset.file instanceof File)) {
+          throw new Error('Web upload failed: selected file is not a valid browser File object.');
+        }
+
+        await onUploadSuccess({
+          file: asset.file,
+          name: asset.name || asset.file.name || 'document',
+          mimeType: asset.mimeType || asset.file.type || 'application/octet-stream',
+          size: asset.size || asset.file.size || 0,
+          uri: asset.uri,
+        });
+
+        return;
+      }
+
+      // ✅ Native fallback
+      await onUploadSuccess({
+        uri: asset.uri,
+        name: asset.name || 'document',
+        mimeType: asset.mimeType || 'application/octet-stream',
+        size: asset.size || 0,
+      });
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("Upload failed: " + error.message);
+      console.error('Document selection/upload error:', error);
+
+      if (onUploadError) {
+        onUploadError(error.message || 'Failed to pick file.');
+      } else {
+        Alert.alert('Upload Error', error.message || 'Failed to pick file.');
+      }
     } finally {
-      setUploading(false);
+      setIsPicking(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.fileText}>
-        {selectedFile ? selectedFile.name : "No file selected yet"}
-      </Text>
+      <Text style={styles.title}>{documentTitle}</Text>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.pickBtn} onPress={pickFile}>
-          <Text style={styles.btnText}>Choose File</Text>
-        </TouchableOpacity>
+      {existingFileUri ? (
+        <Text style={styles.existingText}>
+          A file is already uploaded. You can replace it.
+        </Text>
+      ) : (
+        <Text style={styles.subtitle}>
+          Choose a PDF, JPG, or PNG file (max 5MB)
+        </Text>
+      )}
 
-        <TouchableOpacity
-          style={[styles.uploadBtn, !selectedFile && styles.uploadBtnDisabled]}
-          onPress={handleUpload}
-          disabled={uploading || !selectedFile}
-        >
-          {uploading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.btnText}>Upload</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[styles.button, isPicking && styles.buttonDisabled]}
+        onPress={handleUpload}
+        disabled={isPicking}
+      >
+        {isPicking ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Choose File</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
 
-export default DocumentUploader;
-
 const styles = StyleSheet.create({
-  container: { marginTop: 10 },
-  fileText: { fontSize: 14, color: "#666", marginBottom: 10 },
-  buttonRow: { flexDirection: "row", gap: 10 },
-  pickBtn: { backgroundColor: "#ccc", padding: 10, borderRadius: 6 },
-  uploadBtn: { backgroundColor: "#2d6cdf", padding: 10, borderRadius: 6 },
-  uploadBtnDisabled: { backgroundColor: "#93C5FD" },
-  btnText: { color: "#fff", fontWeight: "600" },
+  container: {
+    paddingVertical: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 16,
+  },
+  existingText: {
+    fontSize: 13,
+    color: '#B45309',
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });
+
+export default DocumentUploader;

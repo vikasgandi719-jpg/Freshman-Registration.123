@@ -4,8 +4,20 @@ import { API, STORAGE_KEYS } from '../constants/config';
 // ─── In-memory token cache (works reliably on web) ────────────────────────────
 let _cachedToken = null;
 
-export const setTokenCache = (token) => { _cachedToken = token; };
-export const clearTokenCache = () => { _cachedToken = null; };
+export const setTokenCache = (token) => {
+  _cachedToken = token;
+};
+
+export const clearTokenCache = () => {
+  _cachedToken = null;
+};
+
+export const getTokenCache = async () => {
+  if (_cachedToken) return _cachedToken;
+  const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+  if (token) _cachedToken = token;
+  return token;
+};
 
 // ─── Request timeout helper ────────────────────────────────────────────────────
 const withTimeout = (promise, ms = API.TIMEOUT) => {
@@ -17,32 +29,37 @@ const withTimeout = (promise, ms = API.TIMEOUT) => {
 
 // ─── Build headers ─────────────────────────────────────────────────────────────
 const buildHeaders = async (isFormData = false) => {
-  // Try memory cache first, then AsyncStorage as fallback
-  let token = _cachedToken;
-  if (!token) {
-    token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    if (token) _cachedToken = token; // warm the cache
+  const token = await getTokenCache();
+
+  const headers = {
+    Accept: 'application/json',
+  };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
   }
 
-  const headers = { Accept: 'application/json' };
-  if (!isFormData) headers['Content-Type'] = 'application/json';
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   return headers;
 };
 
 // ─── Handle response ───────────────────────────────────────────────────────────
 const handleResponse = async (response) => {
   const contentType = response.headers.get('Content-Type') || '';
-  const isJson      = contentType.includes('application/json');
-  const data        = isJson ? await response.json() : await response.text();
+  const isJson = contentType.includes('application/json');
+  const data = isJson ? await response.json() : await response.text();
 
   if (!response.ok) {
     const message =
       (isJson && (data?.message || data?.error)) ||
       `Request failed with status ${response.status}`;
-    const error   = new Error(message);
-    error.status  = response.status;
-    error.data    = data;
+
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
     throw error;
   }
 
@@ -56,9 +73,13 @@ const fetchWithRetry = async (url, options, retries = API.RETRY_COUNT) => {
       const response = await withTimeout(fetch(url, options));
       return response;
     } catch (error) {
-      const isLast    = attempt === retries;
-      const isNetwork = error.message === 'Network request failed' || error.message.includes('timed out');
+      const isLast = attempt === retries;
+      const isNetwork =
+        error.message === 'Network request failed' ||
+        error.message.includes('timed out');
+
       if (isLast || !isNetwork) throw error;
+
       await new Promise((r) => setTimeout(r, 500 * attempt));
     }
   }
@@ -66,11 +87,17 @@ const fetchWithRetry = async (url, options, retries = API.RETRY_COUNT) => {
 
 // ─── Core request function ─────────────────────────────────────────────────────
 const request = async (method, endpoint, body = null, isFormData = false) => {
-  const url     = `${API.BASE_URL}${endpoint}`;
+  const url = `${API.BASE_URL}${endpoint}`;
   const headers = await buildHeaders(isFormData);
 
-  const options = { method, headers };
-  if (body) options.body = isFormData ? body : JSON.stringify(body);
+  const options = {
+    method,
+    headers,
+  };
+
+  if (body) {
+    options.body = isFormData ? body : JSON.stringify(body);
+  }
 
   const response = await fetchWithRetry(url, options);
   return handleResponse(response);
@@ -78,12 +105,12 @@ const request = async (method, endpoint, body = null, isFormData = false) => {
 
 // ─── HTTP methods ──────────────────────────────────────────────────────────────
 const api = {
-  get:    (endpoint)           => request('GET',    endpoint),
-  post:   (endpoint, body)     => request('POST',   endpoint, body),
-  put:    (endpoint, body)     => request('PUT',    endpoint, body),
-  patch:  (endpoint, body)     => request('PATCH',  endpoint, body),
-  delete: (endpoint)           => request('DELETE', endpoint),
-  upload: (endpoint, formData) => request('POST',   endpoint, formData, true),
+  get: (endpoint) => request('GET', endpoint),
+  post: (endpoint, body) => request('POST', endpoint, body),
+  put: (endpoint, body) => request('PUT', endpoint, body),
+  patch: (endpoint, body) => request('PATCH', endpoint, body),
+  delete: (endpoint) => request('DELETE', endpoint),
+  upload: (endpoint, formData) => request('POST', endpoint, formData, true),
 };
 
 export default api;

@@ -1,7 +1,7 @@
-import api from "./api";
-import { API, STORAGE_KEYS } from "../constants/config";
+import { Platform } from "react-native";
+import api, { getTokenCache } from "./api";
+import { API } from "../constants/config";
 import { DOCUMENT_LIST } from "../constants/documents";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DEMO_MODE = false;
 
@@ -29,7 +29,9 @@ const normalizeDocument = (doc) => {
     description: doc.description || base?.description || "",
     icon: doc.icon || base?.icon || "📄",
     required:
-      typeof doc.required === "boolean" ? doc.required : (base?.required ?? false),
+      typeof doc.required === "boolean"
+        ? doc.required
+        : (base?.required ?? false),
 
     status: doc.status || "not_uploaded",
 
@@ -42,7 +44,10 @@ const normalizeDocument = (doc) => {
     fileType: doc.fileType || doc.file_type || doc.mimeType || null,
     mimeType: doc.mimeType || doc.fileType || doc.file_type || null,
 
-    fileName: doc.fileName || doc.file_name || `${base?.title || "Document"}.pdf`,
+    fileName:
+      doc.fileName ||
+      doc.file_name ||
+      `${base?.title || "Document"}.pdf`,
     fileSize: doc.fileSize || doc.file_size || null,
 
     rejectionReason: doc.rejectionReason || doc.rejection_reason || null,
@@ -94,6 +99,38 @@ const mergeWithDocumentList = (docs = []) => {
       rejectionReason: null,
     };
   });
+};
+
+const uploadWeb = async (documentId, formData) => {
+  const token = await getTokenCache();
+
+  const response = await fetch(
+    `${API.BASE_URL}${API.ENDPOINTS.DOCUMENT_UPLOAD}/${documentId}`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    }
+  );
+
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const data = isJson ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const message =
+      (isJson && (data?.message || data?.error)) ||
+      `Upload failed with status ${response.status}`;
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data?.document || data?.data?.document || data?.data || data;
 };
 
 const documentService = {
@@ -173,8 +210,12 @@ const documentService = {
       };
     }
 
+    if (Platform.OS === "web") {
+      return uploadWeb(documentId, formData);
+    }
+
     if (onProgress) {
-      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const token = await getTokenCache();
 
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -206,9 +247,11 @@ const documentService = {
           `${API.BASE_URL}${API.ENDPOINTS.DOCUMENT_UPLOAD}/${documentId}`
         );
         xhr.setRequestHeader("Accept", "application/json");
+
         if (token) {
           xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         }
+
         xhr.send(formData);
       });
     }
@@ -217,6 +260,7 @@ const documentService = {
       `${API.ENDPOINTS.DOCUMENT_UPLOAD}/${documentId}`,
       formData
     );
+
     return response?.document || response?.data?.document || response?.data || response;
   },
 
