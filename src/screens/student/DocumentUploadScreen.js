@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView,
   ScrollView, RefreshControl, TouchableOpacity,
+  Platform,
 } from 'react-native';
 import Modal           from '../../components/common/Modal';
 import DocumentUploader from '../../components/student/DocumentUploader';
@@ -134,20 +135,35 @@ const DocumentUploadScreen = ({ navigation }) => {
 
   const handleUploadSuccess = async (file) => {
     if (selectedDoc) {
-      // ✅ Build FormData here where we have the full file object
       const formData = new FormData();
-      if (file.file) {
-        // Web — expo-document-picker provides actual File object
-        formData.append("file", file.file);
+      if (Platform.OS === "web") {
+        if (file.file instanceof File) {
+          formData.append("file", file.file);
+        } else if (file?.uri) {
+          // Expo web may return uri/name/mimeType without a File instance.
+          // Convert uri -> Blob -> File so multer receives req.file.
+          const response = await fetch(file.uri);
+          const blob = await response.blob();
+          const webFile = new File(
+            [blob],
+            file.name || "document",
+            { type: file.mimeType || blob.type || "application/octet-stream" }
+          );
+          formData.append("file", webFile);
+        } else {
+          throw new Error("Invalid file object for web upload.");
+        }
       } else {
-        // Native
         formData.append("file", {
           uri: file.uri,
           name: file.name || "document.pdf",
           type: file.mimeType || "application/octet-stream",
         });
       }
-      await uploadDocument(selectedDoc.id, formData);
+      const result = await uploadDocument(selectedDoc.id, formData);
+      if (!result?.success) {
+        throw new Error(result?.error || "Upload failed.");
+      }
       if (user?.id) fetchDocuments(user.id);
     }
     setUploadModal(false);

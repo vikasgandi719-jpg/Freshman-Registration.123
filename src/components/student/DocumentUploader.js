@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
+import { UPLOAD } from "../../constants/config";
 
 const DocumentUploader = ({ documentId, onUploadSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -23,12 +24,15 @@ const DocumentUploader = ({ documentId, onUploadSuccess }) => {
 
       const file = result.assets[0];
 
-      const maxSize = documentId === "photo" ? 200 * 1024 : 5 * 1024 * 1024;
+      const maxSize =
+        documentId === "passport_photo"
+          ? UPLOAD.MAX_PHOTO_SIZE_MB * 1024 * 1024
+          : UPLOAD.MAX_FILE_SIZE_MB * 1024 * 1024;
       if (file.size > maxSize) {
         alert(
-          documentId === "photo"
-            ? "Photo must be under 200KB"
-            : "File must be under 5MB"
+          documentId === "passport_photo"
+            ? `Photo must be under ${UPLOAD.MAX_PHOTO_SIZE_MB}MB`
+            : `File must be under ${UPLOAD.MAX_FILE_SIZE_MB}MB`
         );
         return;
       }

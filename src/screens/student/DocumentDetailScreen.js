@@ -62,12 +62,31 @@ const DocumentDetailScreen = ({ navigation, route }) => {
   const info = statusInfo[doc.status] || statusInfo.not_uploaded;
 
   const handleUploadSuccess = async (file) => {
-    const result = await uploadDocument(
-      doc.id,
-      file.uri,
-      file.mimeType,
-      file.name
-    );
+    const formData = new FormData();
+    if (Platform.OS === "web") {
+      if (file.file instanceof File) {
+        formData.append("file", file.file);
+      } else if (file?.uri) {
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+        const webFile = new File(
+          [blob],
+          file.name || "document",
+          { type: file.mimeType || blob.type || "application/octet-stream" }
+        );
+        formData.append("file", webFile);
+      } else {
+        throw new Error("Invalid file object for web upload.");
+      }
+    } else {
+      formData.append("file", {
+        uri: file.uri,
+        name: file.name || "document.pdf",
+        type: file.mimeType || "application/octet-stream",
+      });
+    }
+
+    const result = await uploadDocument(doc.id, formData);
 
     if (!result?.success) {
       throw new Error(result?.error || 'Upload failed');

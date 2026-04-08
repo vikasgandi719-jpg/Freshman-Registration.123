@@ -123,7 +123,15 @@ const documentService = {
       : API.ENDPOINTS.DOCUMENTS_LIST;
 
     const response = await api.get(endpoint);
-    const docs = Array.isArray(response) ? response : response?.data || [];
+    // Support multiple shapes:
+    // - backend may return { success, data: [...] }
+    // - or { success, data: { data: [...] } } (older code)
+    // - or plain array (demo / mock)
+    const docs =
+      Array.isArray(response) ? response :
+      Array.isArray(response?.data) ? response.data :
+      Array.isArray(response?.data?.data) ? response.data.data :
+      [];
     return mergeWithDocumentList(docs);
   },
 

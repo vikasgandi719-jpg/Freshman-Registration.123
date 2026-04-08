@@ -43,8 +43,17 @@ const useAuth = () => {
       context.clearError();
       try {
         const response = await authService.login(uniqueId, password);
-        await context.login(response.user, response.token);
-        studentService.initProfile(response.user);
+        // Be tolerant to different backend response shapes:
+        // { token, user } OR { data: { token, user } } OR { success, token, user }
+        const token = response?.token || response?.data?.token;
+        const user  = response?.user  || response?.data?.user;
+
+        if (!token || !user) {
+          throw new Error("Login response missing token/user. Please try again.");
+        }
+
+        await context.login(user, token);
+        studentService.initProfile(user);
         return { success: true };
       } catch (error) {
         const msg = error?.message || "Login failed. Please try again.";

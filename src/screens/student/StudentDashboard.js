@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, SafeAreaView, RefreshControl,
+  Platform,
 } from "react-native";
 import { useAuth }       from "../../context/AuthContext";
 import { useStudent }    from "../../context/StudentContext";
@@ -151,7 +152,33 @@ const StudentDashboard = ({ navigation }) => {
 
   const handleUploadSuccess = async (file) => {
     if (selectedDoc) {
-      await uploadDocument(selectedDoc.id, file.uri, file.mimeType, file.name);
+      const formData = new FormData();
+      if (Platform.OS === "web") {
+        if (file.file instanceof File) {
+          formData.append("file", file.file);
+        } else if (file?.uri) {
+          const response = await fetch(file.uri);
+          const blob = await response.blob();
+          const webFile = new File(
+            [blob],
+            file.name || "document",
+            { type: file.mimeType || blob.type || "application/octet-stream" }
+          );
+          formData.append("file", webFile);
+        } else {
+          throw new Error("Invalid file object for web upload.");
+        }
+      } else {
+        formData.append("file", {
+          uri: file.uri,
+          name: file.name || "document.pdf",
+          type: file.mimeType || "application/octet-stream",
+        });
+      }
+      const result = await uploadDocument(selectedDoc.id, formData);
+      if (!result?.success) {
+        throw new Error(result?.error || "Upload failed.");
+      }
       if (user?.id) fetchDocuments(user.id);
     }
     closeModal("docUpload"); setSelectedDoc(null);
