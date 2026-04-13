@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState } from "react";
 import {
   View,
@@ -9,11 +8,6 @@ import {
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { UPLOAD } from "../../constants/config";
-=======
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
->>>>>>> c27836c8543bb82f81e1890a9b2bfc65248491d7
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -38,7 +32,6 @@ const DocumentUploader = ({
 
       console.log('DocumentPicker result:', result);
 
-<<<<<<< HEAD
       const file = result.assets[0];
 
       const maxSize =
@@ -51,10 +44,6 @@ const DocumentUploader = ({
             ? `Photo must be under ${UPLOAD.MAX_PHOTO_SIZE_MB}MB`
             : `File must be under ${UPLOAD.MAX_FILE_SIZE_MB}MB`
         );
-=======
-      if (result.canceled) {
-        setIsPicking(false);
->>>>>>> c27836c8543bb82f81e1890a9b2bfc65248491d7
         return;
       }
 

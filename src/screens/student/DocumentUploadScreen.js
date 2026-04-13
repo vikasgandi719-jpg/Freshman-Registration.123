@@ -1,18 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-<<<<<<< HEAD
   View, Text, StyleSheet, SafeAreaView,
   ScrollView, RefreshControl, TouchableOpacity,
-=======
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Alert,
->>>>>>> c27836c8543bb82f81e1890a9b2bfc65248491d7
   Platform,
 } from 'react-native';
 import Modal from '../../components/common/Modal';
@@ -170,7 +159,6 @@ const DocumentUploadScreen = () => {
     setUploadModal(true);
   };
 
-<<<<<<< HEAD
   const handleUploadSuccess = async (file) => {
     if (selectedDoc) {
       const formData = new FormData();
@@ -203,39 +191,6 @@ const DocumentUploadScreen = () => {
         throw new Error(result?.error || "Upload failed.");
       }
       if (user?.id) fetchDocuments(user.id);
-=======
-  const uploadBrowserFile = async (documentId, browserFile) => {
-    const token = await getTokenCache();
-
-    const formData = new FormData();
-    formData.append('file', browserFile, browserFile.name);
-
-    console.log('Uploading browser file directly...');
-    console.log('browserFile:', browserFile);
-    console.log('browserFile instanceof File:', browserFile instanceof File);
-
-    const response = await fetch(
-      `${API.BASE_URL}${API.ENDPOINTS.DOCUMENT_UPLOAD}/${documentId}`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
-      }
-    );
-
-    const contentType = response.headers.get('content-type') || '';
-    const isJson = contentType.includes('application/json');
-    const data = isJson ? await response.json() : await response.text();
-
-    console.log('Upload response status:', response.status);
-    console.log('Upload response data:', data);
-
-    if (!response.ok) {
-      throw new Error(data?.message || data?.error || `Upload failed with status ${response.status}`);
->>>>>>> c27836c8543bb82f81e1890a9b2bfc65248491d7
     }
 
     return data;
