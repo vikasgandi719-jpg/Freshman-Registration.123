@@ -36,7 +36,8 @@ const useStudents = () => {
   const fetchStudentById = useCallback(async (studentId) => {
     context.setLoading(true);
     try {
-      const student = await adminService.getStudentById(studentId);
+      const response = await adminService.getStudentById(studentId);
+      const student = response?.data || response;
       context.setSelected(student);
       return { success: true, data: student };
     } catch (error) {

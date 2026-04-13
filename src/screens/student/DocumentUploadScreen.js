@@ -1,14 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView,
   ScrollView, RefreshControl, TouchableOpacity,
-  Platform,
+  Platform, Alert,
 } from 'react-native';
 import Modal from '../../components/common/Modal';
 import { useAuth } from '../../context/AuthContext';
 import useDocuments from '../../hooks/useDocuments';
-import { API } from '../../constants/config';
-import { getTokenCache } from '../../services/api';
 
 const DOC_GROUPS = [
   {
@@ -119,13 +117,11 @@ const STATUS = {
 
 const DocumentUploadScreen = () => {
   const { user } = useAuth();
-  const { documents, fetchDocuments } = useDocuments();
+  const { documents, fetchDocuments, uploadDocument } = useDocuments();
 
   const [refreshing, setRefreshing] = useState(false);
   const [uploadModal, setUploadModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
-
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -192,8 +188,6 @@ const DocumentUploadScreen = () => {
       }
       if (user?.id) fetchDocuments(user.id);
     }
-
-    return data;
   };
 
   const openBrowserFilePicker = () => {
@@ -216,7 +210,7 @@ const DocumentUploadScreen = () => {
 
         console.log('Direct browser selected file:', file);
 
-        await uploadBrowserFile(selectedDoc.id, file);
+        await handleUploadSuccess({ file, name: file.name, mimeType: file.type });
 
         if (user?.id) {
           await fetchDocuments(user.id);
