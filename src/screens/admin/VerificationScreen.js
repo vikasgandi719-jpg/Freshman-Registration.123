@@ -22,12 +22,12 @@ const VerificationScreen = ({ navigation, route }) => {
   const [activeId,   setActiveId]   = useState(passedStudent?.id || null);
 
   useEffect(() => {
-    fetchStudents({ status: 'pending' });
+    fetchStudents();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchStudents({ status: 'pending' });
+    await fetchStudents();
     setRefreshing(false);
   };
 

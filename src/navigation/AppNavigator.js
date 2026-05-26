@@ -23,9 +23,9 @@ const SplashScreen = () => {
 };
  
 const AppNavigator = () => {
-  const { isLoggedIn, isLoading }              = useAuth();
-  const { isLoggedIn: isAdminLoggedIn }        = useAdmin();  // ← NO isLoading from admin
-  const { theme, isDark }                      = useTheme();
+  const { isLoggedIn, isLoading: authLoading }       = useAuth();
+  const { isLoggedIn: isAdminLoggedIn, isInitializing: adminInitializing } = useAdmin();
+  const { theme, isDark }                            = useTheme();
  
   const navigationTheme = {
     ...(isDark ? DarkTheme : DefaultTheme),
@@ -36,8 +36,7 @@ const AppNavigator = () => {
     },
   };
  
-  // ── FIX: Only ever block on AuthContext isLoading — admin never blocks ────────
-  if (isLoading) return <SplashScreen />;
+  if (authLoading || adminInitializing) return <SplashScreen />;
  
   return (
     <NavigationContainer theme={navigationTheme}>

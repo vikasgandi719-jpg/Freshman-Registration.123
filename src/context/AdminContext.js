@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../constants/config";
+import { setTokenCache, clearTokenCache } from "../services/api";
 
 const initialState = {
   admin:      null,
   token:      null,
   isLoggedIn: false,
-  isLoading:  false,   // ── FIX: start false — never blocks AppNavigator
+  isInitializing: true,
+  isLoading:  false,
   error:      null,
   students:         [],
   filteredStudents: [],
@@ -21,11 +23,42 @@ const initialState = {
 };
 
 const ADMIN_ACTIONS = {
-  SET_LOADING:"SET_LOADING", LOGIN_SUCCESS:"LOGIN_SUCCESS", LOGOUT:"LOGOUT",
-  SET_ERROR:"SET_ERROR", CLEAR_ERROR:"CLEAR_ERROR", SET_STUDENTS:"SET_STUDENTS",
-  SET_SELECTED:"SET_SELECTED", UPDATE_STUDENT:"UPDATE_STUDENT", SET_STATS:"SET_STATS",
-  SET_SEARCH:"SET_SEARCH", SET_STATUS_FILTER:"SET_STATUS_FILTER",
-  SET_BRANCH_FILTER:"SET_BRANCH_FILTER", CLEAR_FILTERS:"CLEAR_FILTERS", SET_PAGE:"SET_PAGE",
+  SET_INITIALIZING: "SET_INITIALIZING",
+  SET_LOADING: "SET_LOADING",
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGOUT: "LOGOUT",
+  SET_ERROR: "SET_ERROR",
+  CLEAR_ERROR: "CLEAR_ERROR",
+  RESTORE_SESSION: "RESTORE_SESSION",
+  SET_STUDENTS: "SET_STUDENTS",
+  SET_SELECTED: "SET_SELECTED",
+  UPDATE_STUDENT: "UPDATE_STUDENT",
+  SET_STATS: "SET_STATS",
+  SET_SEARCH: "SET_SEARCH",
+  SET_STATUS_FILTER: "SET_STATUS_FILTER",
+  SET_BRANCH_FILTER: "SET_BRANCH_FILTER",
+  CLEAR_FILTERS: "CLEAR_FILTERS",
+  SET_PAGE: "SET_PAGE",
+};
+
+const normalizeStudent = (student) => {
+  if (!student) return student;
+  const normalized = { ...student };
+
+  if (student.verification_status && !student.verificationStatus) {
+    normalized.verificationStatus = student.verification_status;
+  }
+  if (student.branch_code && !student.branch) {
+    normalized.branch = student.branch_code;
+  }
+  if (student.unique_id && !student.uniqueId) {
+    normalized.uniqueId = student.unique_id;
+  }
+  if (student.created_at && !student.createdAt) {
+    normalized.createdAt = student.created_at;
+  }
+
+  return normalized;
 };
 
 const applyFilters = (students, searchQuery, statusFilter, branchFilter) => {
@@ -44,26 +77,49 @@ const applyFilters = (students, searchQuery, statusFilter, branchFilter) => {
 
 const adminReducer = (state, action) => {
   switch (action.type) {
+    case ADMIN_ACTIONS.SET_INITIALIZING:
+      return { ...state, isInitializing: action.payload };
     case ADMIN_ACTIONS.SET_LOADING:
       return { ...state, isLoading: action.payload };
     case ADMIN_ACTIONS.LOGIN_SUCCESS:
-      return { ...state, admin: action.payload.admin, token: action.payload.token, isLoggedIn: true, isLoading: false, error: null };
+      return {
+        ...state,
+        admin: action.payload.admin,
+        token: action.payload.token,
+        isLoggedIn: true,
+        isInitializing: false,
+        isLoading: false,
+        error: null,
+      };
+    case ADMIN_ACTIONS.RESTORE_SESSION:
+      return {
+        ...state,
+        admin: action.payload.admin,
+        token: action.payload.token,
+        isLoggedIn: true,
+        isInitializing: false,
+        isLoading: false,
+        error: null,
+      };
     case ADMIN_ACTIONS.LOGOUT:
-      return { ...initialState };
+      return { ...initialState, isInitializing: false, isLoading: false };
     case ADMIN_ACTIONS.SET_ERROR:
       return { ...state, error: action.payload, isLoading: false };
     case ADMIN_ACTIONS.CLEAR_ERROR:
       return { ...state, error: null };
     case ADMIN_ACTIONS.SET_STUDENTS: {
-      const filtered = applyFilters(action.payload.students, state.searchQuery, state.statusFilter, state.branchFilter);
-      return { ...state, students: action.payload.students, filteredStudents: filtered,
-               totalStudents: action.payload.total || action.payload.students.length,
+      const normalizedStudents = (action.payload.students || []).map(normalizeStudent);
+      const filtered = applyFilters(normalizedStudents, state.searchQuery, state.statusFilter, state.branchFilter);
+      return { ...state, students: normalizedStudents, filteredStudents: filtered,
+               totalStudents: action.payload.total || normalizedStudents.length,
                totalPages: action.payload.totalPages || 1, isLoading: false };
     }
     case ADMIN_ACTIONS.SET_SELECTED:
-      return { ...state, selectedStudent: action.payload };
+      return { ...state, selectedStudent: normalizeStudent(action.payload) };
     case ADMIN_ACTIONS.UPDATE_STUDENT: {
-      const updated = state.students.map((s) => s.id === action.payload.id ? { ...s, ...action.payload } : s);
+      const updated = state.students.map((s) =>
+        s.id === action.payload.id ? normalizeStudent({ ...s, ...action.payload }) : s
+      );
       const filtered = applyFilters(updated, state.searchQuery, state.statusFilter, state.branchFilter);
       return { ...state, students: updated, filteredStudents: filtered,
                selectedStudent: state.selectedStudent?.id === action.payload.id
@@ -97,15 +153,37 @@ const AdminContext = createContext(null);
 export const AdminProvider = ({ children }) => {
   const [state, dispatch] = useReducer(adminReducer, initialState);
 
-  // ── FIX: Just silently clear stale storage. No isLoading toggling at all.
-  // isLoading starts false so AppNavigator is never blocked by admin state.
   useEffect(() => {
-    AsyncStorage.removeItem(STORAGE_KEYS.ADMIN_DATA).catch(() => {});
+    const restoreSession = async () => {
+      try {
+        const token = await AsyncStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
+        const adminData = await AsyncStorage.getItem(STORAGE_KEYS.ADMIN_DATA);
+
+        if (token && adminData) {
+          setTokenCache(token);
+          dispatch({
+            type: ADMIN_ACTIONS.RESTORE_SESSION,
+            payload: {
+              token,
+              admin: JSON.parse(adminData),
+            },
+          });
+        } else {
+          dispatch({ type: ADMIN_ACTIONS.SET_INITIALIZING, payload: false });
+        }
+      } catch {
+        dispatch({ type: ADMIN_ACTIONS.SET_INITIALIZING, payload: false });
+      }
+    };
+
+    restoreSession();
   }, []);
 
   const loginAdmin = async (admin, token) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.ADMIN_DATA, JSON.stringify(admin));
+      await AsyncStorage.setItem(STORAGE_KEYS.ADMIN_TOKEN, token);
+      setTokenCache(token);
       dispatch({ type: ADMIN_ACTIONS.LOGIN_SUCCESS, payload: { admin, token } });
     } catch {
       dispatch({ type: ADMIN_ACTIONS.SET_ERROR, payload: "Failed to save admin session." });
@@ -113,7 +191,11 @@ export const AdminProvider = ({ children }) => {
   };
 
   const logoutAdmin = async () => {
-    await AsyncStorage.removeItem(STORAGE_KEYS.ADMIN_DATA).catch(() => {});
+    clearTokenCache();
+    await AsyncStorage.multiRemove([
+      STORAGE_KEYS.ADMIN_DATA,
+      STORAGE_KEYS.ADMIN_TOKEN,
+    ]).catch(() => {});
     dispatch({ type: ADMIN_ACTIONS.LOGOUT });
   };
 

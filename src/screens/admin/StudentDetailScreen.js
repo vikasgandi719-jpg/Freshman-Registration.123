@@ -31,6 +31,16 @@ const StudentDetailScreen = ({ navigation, route }) => {
 
   const student = selectedStudent || passedStudent;
 
+  const handleViewDocumentsFromCard = () => setTab('documents');
+
+  const handleEditProfilePress = () => {
+    Alert.alert(
+      'Edit profile',
+      'Students update their own profile in the student app. Here you can verify or reject this registration using the actions below.',
+      [{ text: 'OK' }]
+    );
+  };
+
   const handleDocumentPress = async (doc) => {
     const fileSource = doc?.fileUrl || doc?.file_url || doc?.fileUri || doc?.file_uri;
     const fileType = doc?.fileType || doc?.file_type || doc?.mimeType || doc?.mime_type || '';
@@ -109,7 +119,11 @@ const StudentDetailScreen = ({ navigation, route }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {tab === 'profile' ? (
           <>
-            <ProfileCard student={student} />
+            <ProfileCard
+              student={student}
+              onEditPress={handleEditProfilePress}
+              onViewDocuments={handleViewDocumentsFromCard}
+            />
             <VerificationControls
               student={student}
               currentStatus={student.verificationStatus}

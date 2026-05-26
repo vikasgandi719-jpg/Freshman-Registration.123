@@ -50,6 +50,7 @@ export const STORAGE_KEYS = {
   REFRESH_TOKEN: "@bvritn_refresh_token",
   USER_DATA: "@bvritn_user_data",
   ADMIN_DATA: "@bvritn_admin_data",
+  ADMIN_TOKEN: "@bvritn_admin_token",
   ONBOARDING: "@bvritn_onboarding_done",
   THEME: "@bvritn_theme",
   LAST_LOGIN: "@bvritn_last_login",

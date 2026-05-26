@@ -14,6 +14,11 @@ export const clearTokenCache = () => {
 
 export const getTokenCache = async () => {
   if (_cachedToken) return _cachedToken;
+  const adminToken = await AsyncStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
+  if (adminToken) {
+    _cachedToken = adminToken;
+    return adminToken;
+  }
   const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   if (token) _cachedToken = token;
   return token;

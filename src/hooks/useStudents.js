@@ -44,6 +44,8 @@ const useStudents = () => {
       const msg = error?.message || 'Failed to fetch student details.';
       context.setError(msg);
       return { success: false, error: msg };
+    } finally {
+      context.setLoading(false);
     }
   }, [context]);
 
