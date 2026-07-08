@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import Input from "../../components/common/Input";
 import PasswordInput from "../../components/auth/PasswordInput";
@@ -33,6 +34,7 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -46,20 +48,26 @@ const LoginScreen = ({ navigation }) => {
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backBtnText}>‹ Back</Text>
+            <Text style={styles.backBtnIcon}>‹</Text>
+            <Text style={styles.backBtnText}>Back</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <View style={styles.headerIcon}>
-              <Text style={styles.headerIconText}>👤</Text>
+            <View style={styles.headerIconOuter}>
+              <View style={styles.headerIcon}>
+                <Text style={styles.headerIconText}>👤</Text>
+              </View>
             </View>
-            <Text style={styles.title}>Student Login</Text>
-            <Text style={styles.subtitle}>Sign in with your Unique ID</Text>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>
+              Sign in with your Unique ID to continue
+            </Text>
           </View>
 
           {authError && (
             <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>⚠ {authError}</Text>
+              <Text style={styles.errorBannerIcon}>⚠</Text>
+              <Text style={styles.errorBannerText}>{authError}</Text>
             </View>
           )}
 
@@ -143,9 +151,26 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#F8FAFC" },
   container: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
-  backBtn: { marginTop: 16, marginBottom: 8, alignSelf: "flex-start" },
+  backBtn: {
+    marginTop: 16,
+    marginBottom: 8,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  backBtnIcon: { fontSize: 22, color: "#1D4ED8", fontWeight: "600" },
   backBtnText: { fontSize: 16, color: "#1D4ED8", fontWeight: "600" },
   header: { alignItems: "center", marginBottom: 28, marginTop: 12 },
+  headerIconOuter: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   headerIcon: {
     width: 72,
     height: 72,
@@ -153,22 +178,35 @@ const styles = StyleSheet.create({
     backgroundColor: "#DBEAFE",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 14,
   },
   headerIconText: { fontSize: 32 },
-  title: { fontSize: 26, fontWeight: "800", color: "#0F172A", marginBottom: 6 },
-  subtitle: { fontSize: 14, color: "#64748B", textAlign: "center" },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 20,
+  },
   errorBanner: {
     backgroundColor: "#FFF1F2",
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    padding: 14,
     marginBottom: 16,
     borderLeftWidth: 4,
     borderLeftColor: "#F43F5E",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  errorBannerText: { fontSize: 13, color: "#BE123C", fontWeight: "500" },
+  errorBannerIcon: { fontSize: 16 },
+  errorBannerText: { fontSize: 13, color: "#BE123C", fontWeight: "500", flex: 1 },
   form: { marginBottom: 20 },
-  forgotBtn: { alignSelf: "flex-end", marginTop: -8, marginBottom: 16 },
+  forgotBtn: { alignSelf: "flex-end", marginTop: -8, marginBottom: 18 },
   forgotBtnText: { fontSize: 13, color: "#1D4ED8", fontWeight: "600" },
   submitBtn: {
     backgroundColor: "#1D4ED8",
@@ -198,7 +236,12 @@ const styles = StyleSheet.create({
   },
   registerLabel: { fontSize: 14, color: "#64748B" },
   registerLink: { fontSize: 14, color: "#1D4ED8", fontWeight: "700" },
-  adminLink: { alignItems: "center", paddingVertical: 10 },
+  adminLink: {
+    alignItems: "center",
+    paddingVertical: 10,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+  },
   adminLinkText: { fontSize: 13, color: "#64748B", fontWeight: "500" },
 });
 

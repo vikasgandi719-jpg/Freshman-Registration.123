@@ -31,14 +31,16 @@ const Document = {
     return rows[0] || null;
   },
 
-  upsert: async ({ studentId, documentType, title, fileUrl, fileType, fileSize }) => {
+  upsert: async ({ studentId, documentType, title, fileUrl, cloudinaryPublicId, fileType, fileSize }) => {
     const { rows } = await db.query(
       `INSERT INTO documents
-         (student_id, document_type, title, file_url, file_type, file_size, status, uploaded_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 'pending', NOW(), NOW())
+         (student_id, document_type, title, file_url, cloudinary_public_id,
+          file_type, file_size, status, uploaded_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', NOW(), NOW())
        ON CONFLICT (student_id, document_type)
        DO UPDATE SET
          file_url = EXCLUDED.file_url,
+         cloudinary_public_id = EXCLUDED.cloudinary_public_id,
          file_type = EXCLUDED.file_type,
          file_size = EXCLUDED.file_size,
          title = EXCLUDED.title,
@@ -47,7 +49,7 @@ const Document = {
          uploaded_at = NOW(),
          updated_at = NOW()
        RETURNING *`,
-      [studentId, documentType, title, fileUrl, fileType, fileSize]
+      [studentId, documentType, title, fileUrl, cloudinaryPublicId || null, fileType, fileSize]
     );
     return rows[0];
   },

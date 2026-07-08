@@ -1,127 +1,86 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "./api";
 import { API } from "../constants/config";
 
-const DEMO_MODE = true;
-const PROFILE_STORAGE_KEY = "@student_profile_data";
+// Backend rows are snake_case; the rest of the app was built around
+// camelCase (matches the old demo shape). Map once here so every screen
+// keeps working without a rewrite.
+export const mapUserFromApi = (row) => {
+  if (!row) return row;
+  return {
+    id: row.id,
+    uniqueId: row.unique_id,
+    name: row.name,
+    firstName: row.first_name || "",
+    lastName: row.last_name || "",
+    email: row.email || "",
+    phone: row.phone || "",
+    address: row.address || "",
+    parentPhone: row.parent_phone,
+    interhallTicket: row.interhall_ticket,
+    dob: row.dob,
 
-let storedProfile = null;
+    tenthPercentage: row.tenth_percentage || "",
+    interCollege: row.inter_college || "",
+    interHallticket: row.inter_hallticket || "",
+    interMarks: row.inter_marks || "",
+
+    hostelType: row.hostel_type,
+    transportType: row.transport_type || "",
+
+    fatherName: row.father_name || "",
+    fatherPhone: row.father_phone || "",
+    fatherProfession: row.father_profession || "",
+    motherName: row.mother_name || "",
+    motherPhone: row.mother_phone || "",
+    motherProfession: row.mother_profession || "",
+
+    emacetHallTicket: row.emacet_hall_ticket || "",
+    emacetRank: row.emacet_rank || "",
+
+    higherStudiesInterest: row.higher_studies_interest,
+    higherStudiesCountry: row.higher_studies_country || "",
+    higherStudiesCountryDetail: row.higher_studies_country_detail || "",
+    higherStudiesProgram: row.higher_studies_program || "",
+
+    hobbies: row.hobbies || "",
+    skillsValues: row.skills_values || "",
+    goalsShortTerm: row.goals_short_term || "",
+    goalsLongTerm: row.goals_long_term || "",
+    booksNewspaper: row.books_newspaper || "",
+    sportName: row.sport_name || "",
+    sportRole: row.sport_role || "",
+    tournamentWon: row.tournament_won || "",
+    placementDomain: row.placement_domain || "",
+
+    photoUri: row.photo_url || null,
+    verificationStatus: row.verification_status || "pending",
+    branchCode: row.branch_code,
+    createdAt: row.created_at,
+  };
+};
+
+const UPDATE_FIELDS = [
+  "firstName", "lastName", "email", "phone", "address",
+  "tenthPercentage", "interMarks", "interCollege", "interHallticket",
+  "hostelType", "transportType",
+  "fatherName", "fatherPhone", "fatherProfession",
+  "motherName", "motherPhone", "motherProfession",
+  "emacetHallTicket", "emacetRank",
+  "higherStudiesInterest", "higherStudiesCountry",
+  "higherStudiesCountryDetail", "higherStudiesProgram",
+  "hobbies", "skillsValues", "goalsShortTerm", "goalsLongTerm",
+  "booksNewspaper", "sportName", "sportRole", "tournamentWon", "placementDomain",
+];
 
 const studentService = {
   getProfile: async () => {
-    if (DEMO_MODE) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      if (storedProfile) {
-        return storedProfile;
-      }
-
-      try {
-        const savedProfile = await AsyncStorage.getItem(PROFILE_STORAGE_KEY);
-        if (savedProfile) {
-          storedProfile = JSON.parse(savedProfile);
-          return storedProfile;
-        }
-      } catch (e) {
-        console.log("Error loading profile from storage:", e);
-      }
-
-      return {
-        id: "1",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        address: "",
-        tenthPercentage: "",
-        interCollege: "",
-        interHallticket: "",
-        interMarks: "",
-        hostelType: null,
-        transportType: "",
-        fatherName: "",
-        fatherPhone: "",
-        fatherProfession: "",
-        motherName: "",
-        motherPhone: "",
-        motherProfession: "",
-        emacetHallTicket: "",
-        emacetRank: "",
-        higherStudiesInterest: null,
-        higherStudiesCountry: "",
-        higherStudiesCountryDetail: "",
-        higherStudiesProgram: "",
-        hobbies: "",
-        skillsValues: "",
-        goalsShortTerm: "",
-        goalsLongTerm: "",
-        booksNewspaper: "",
-        sportName: "",
-        sportRole: "",
-        tournamentWon: "",
-        placementDomain: "",
-        verificationStatus: "pending",
-        photoUri: null,
-      };
-    }
-
     const response = await api.get(API.ENDPOINTS.STUDENT_PROFILE);
-    return response;
+    return mapUserFromApi(response?.data || response);
   },
 
   updateProfile: async (data) => {
-    if (DEMO_MODE) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      storedProfile = { ...storedProfile, ...data };
-
-      try {
-        await AsyncStorage.setItem(
-          PROFILE_STORAGE_KEY,
-          JSON.stringify(storedProfile),
-        );
-      } catch (e) {
-        console.log("Error saving profile:", e);
-      }
-
-      return {
-        success: true,
-        message: "Profile updated (Demo)",
-        ...storedProfile,
-      };
-    }
-
     const payload = {};
-    const fields = [
-      "firstName",
-      "lastName",
-      "email",
-      "phone",
-      "address",
-      "tenthPercentage",
-      "interPercentage",
-      "hostelType",
-      "transportType",
-      "fatherName",
-      "fatherPhone",
-      "motherName",
-      "motherPhone",
-      "emacetHallTicket",
-      "emacetRank",
-      "higherStudiesInterest",
-      "higherStudiesCountry",
-      "higherStudiesCountryDetail",
-      "hobbies",
-      "skillsValues",
-      "goalsShortTerm",
-      "goalsLongTerm",
-      "booksNewspaper",
-      "sportName",
-      "sportRole",
-      "tournamentsAttended",
-    ];
-
-    fields.forEach((field) => {
+    UPDATE_FIELDS.forEach((field) => {
       if (data[field] !== undefined) {
         payload[field] =
           typeof data[field] === "string" ? data[field].trim() : data[field];
@@ -129,96 +88,33 @@ const studentService = {
     });
 
     const response = await api.put(API.ENDPOINTS.STUDENT_UPDATE, payload);
-    return response;
+    return mapUserFromApi(response?.data || response);
   },
 
-  initProfile: (userData) => {
-    storedProfile = {
-      id: userData.id || "1",
-      firstName: userData.firstName || "",
-      lastName: userData.lastName || "",
-      email: "",
-      phone: "",
-      address: "",
-      tenthPercentage: "",
-      interCollege: "",
-      interHallticket: "",
-      interMarks: "",
-      hostelType: null,
-      transportType: "",
-      fatherName: "",
-      fatherPhone: "",
-      fatherProfession: "",
-      motherName: "",
-      motherPhone: "",
-      motherProfession: "",
-      emacetHallTicket: "",
-      emacetRank: "",
-      higherStudiesInterest: null,
-      higherStudiesCountry: "",
-      higherStudiesCountryDetail: "",
-      higherStudiesProgram: "",
-      hobbies: "",
-      skillsValues: "",
-      goalsShortTerm: "",
-      goalsLongTerm: "",
-      booksNewspaper: "",
-      sportName: "",
-      sportRole: "",
-      tournamentWon: "",
-      placementDomain: "",
-      uniqueId: userData.uniqueId || "",
-      verificationStatus: "pending",
-      photoUri: null,
-    };
-  },
-
-  resetProfile: async () => {
-    storedProfile = null;
-    try {
-      await AsyncStorage.removeItem(PROFILE_STORAGE_KEY);
-    } catch (e) {
-      console.log("Error clearing profile:", e);
-    }
-  },
+  // No-op kept for backward compatibility — profile now always comes from
+  // the server via getProfile(), called on mount by the profile/dashboard screens.
+  initProfile: () => {},
+  resetProfile: async () => {},
 
   uploadPhoto: async (formData) => {
-    if (DEMO_MODE) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return { photoUri: "demo://photo.jpg" };
-    }
-
     const response = await api.upload(API.ENDPOINTS.STUDENT_PHOTO, formData);
-    return response;
-  },
-
-  getStudentById: async (studentId) => {
-    if (DEMO_MODE) {
-      return { id: studentId, name: "Demo Student" };
-    }
-
-    const response = await api.get(
-      `${API.ENDPOINTS.STUDENT_PROFILE}/${studentId}`,
-    );
-    return response;
+    return { photoUri: response?.photoUri || response?.data?.photoUri };
   },
 
   getVerificationStatus: async () => {
-    if (DEMO_MODE) {
-      return { status: "pending", message: "Under review (Demo)" };
-    }
-
     const response = await api.get("/student/verification-status");
-    return response;
+    return { status: response?.status };
   },
 
   getDocumentSummary: async () => {
-    if (DEMO_MODE) {
-      return { total: 9, approved: 0, pending: 0, rejected: 0, notUploaded: 9 };
-    }
-
     const response = await api.get("/student/document-summary");
-    return response;
+    const s = response?.data || response || {};
+    return {
+      total: Number(s.total) || 0,
+      approved: Number(s.approved) || 0,
+      pending: Number(s.pending) || 0,
+      rejected: Number(s.rejected) || 0,
+    };
   },
 };
 

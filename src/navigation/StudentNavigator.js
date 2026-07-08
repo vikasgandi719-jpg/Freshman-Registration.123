@@ -9,6 +9,7 @@ import StudentDashboard      from '../screens/student/StudentDashboard';
 import DocumentUploadScreen  from '../screens/student/DocumentUploadScreen';
 import ProfileScreen         from '../screens/student/ProfileScreen';
 import DocumentDetailScreen  from '../screens/student/DocumentDetailScreen';
+import ChangePasswordScreen  from '../screens/student/ChangePasswordScreen';
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -108,6 +109,11 @@ const StudentNavigator = () => {
           presentation:   'modal',
           gestureEnabled: true,
         }}
+      />
+      <Stack.Screen
+        name={SCREENS.CHANGE_PASSWORD}
+        component={ChangePasswordScreen}
+        options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>
   );

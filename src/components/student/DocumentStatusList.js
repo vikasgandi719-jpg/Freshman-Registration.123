@@ -8,7 +8,15 @@ const FILTER_MAP = {
   Rejected: 'rejected', 'Not Uploaded': 'not_uploaded',
 };
 
-const DocumentStatusList = ({ documents = [], onDocumentPress, onUploadPress, showFilter = true }) => {
+const DocumentStatusList = ({
+  documents = [],
+  onDocumentPress,
+  onUploadPress,
+  onApprovePress,
+  onRejectPress,
+  busyDocId = null,
+  showFilter = true,
+}) => {
   const [activeFilter, setActiveFilter] = useState('All');
 
   const filteredDocs = FILTER_MAP[activeFilter]
@@ -69,8 +77,11 @@ const DocumentStatusList = ({ documents = [], onDocumentPress, onUploadPress, sh
         renderItem={({ item }) => (
           <DocumentCard
             document={item}
-            onPress={() => onDocumentPress && onDocumentPress(item)}
-            onUpload={() => onUploadPress && onUploadPress(item)}
+            onPress={onDocumentPress ? () => onDocumentPress(item) : undefined}
+            onUpload={onUploadPress ? () => onUploadPress(item) : undefined}
+            onApprove={onApprovePress}
+            onReject={onRejectPress}
+            actionBusy={busyDocId === (item.dbId || item.id)}
           />
         )}
         ListEmptyComponent={

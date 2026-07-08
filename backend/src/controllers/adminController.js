@@ -19,11 +19,20 @@ exports.adminLogin = async (req, res, next) => {
     const valid = await compare(password, admin.password_hash);
     if (!valid) return error(res, 'Invalid credentials', 401);
 
-    const token = signToken({ id: admin.id, email: admin.email, role: 'admin' });
+    const token = signToken({
+      id: admin.id,
+      email: admin.email,
+      role: admin.role,
+      branchCode: admin.branch_code || null,
+      type: 'admin',
+    });
 
     return success(res, {
       token,
-      admin: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
+      admin: {
+        id: admin.id, name: admin.name, email: admin.email,
+        role: admin.role, branchCode: admin.branch_code || null,
+      },
     }, 'Admin login successful');
   } catch (err) {
     next(err);

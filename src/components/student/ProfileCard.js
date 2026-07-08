@@ -50,10 +50,10 @@ const ProfileCard = ({ student = {}, onEditPress, onViewDocuments }) => {
       </View>
 
       <View style={styles.infoSection}>
-        {email    && <InfoRow icon="✉️" label="Email"    value={email} />}
-        {phone    && <InfoRow icon="📞" label="Phone"    value={phone} />}
-        {branch   && <InfoRow icon="🏫" label="Branch"   value={branch} />}
-        {semester && <InfoRow icon="📚" label="Semester" value={`Semester ${semester}`} />}
+        {email    ? <InfoRow icon="✉️" label="Email"    value={email} /> : null}
+        {phone    ? <InfoRow icon="📞" label="Phone"    value={phone} /> : null}
+        {branch   ? <InfoRow icon="🏫" label="Branch"   value={branch} /> : null}
+        {semester ? <InfoRow icon="📚" label="Semester" value={`Semester ${semester}`} /> : null}
       </View>
 
       <View style={styles.actions}>

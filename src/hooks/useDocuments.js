@@ -1,6 +1,27 @@
 import { useState, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { useStudent } from '../context/StudentContext';
 import documentService from '../services/documentService';
+
+// On web, browser FormData expects a Blob/File — the RN
+// `{uri, type, name}` object literal serializes to "[object Object]"
+// and Multer sees no file. Convert the picked URI to a Blob first.
+const appendFileToFormData = async (formData, fileUri, fileType, fileName) => {
+  if (Platform.OS === 'web') {
+    const response = await fetch(fileUri);
+    const blob = await response.blob();
+    const file = new File([blob], fileName || 'document', {
+      type: fileType || blob.type || 'application/octet-stream',
+    });
+    formData.append('file', file);
+  } else {
+    formData.append('file', {
+      uri: fileUri,
+      type: fileType || 'application/pdf',
+      name: fileName || 'document',
+    });
+  }
+};
 
 const useDocuments = () => {
   const context = useStudent();
@@ -36,11 +57,7 @@ const useDocuments = () => {
 
     try {
       const formData = new FormData();
-      formData.append('file', {
-        uri:  fileUri,
-        type: fileType || 'application/pdf',
-        name: fileName || 'document',
-      });
+      await appendFileToFormData(formData, fileUri, fileType, fileName);
       formData.append('documentId', String(documentId));
 
       const response = await documentService.uploadDocument(

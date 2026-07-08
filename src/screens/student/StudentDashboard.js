@@ -116,8 +116,8 @@ const StudentDashboard = ({ navigation }) => {
     tenthBoard:      student.tenthBoard      || "",
   });
   const openEapcet = () => open("eapcet", {
-    eapcetHallTicket: student.eapcetHallTicket || "",
-    eapcetRank:       student.eapcetRank       || "",
+    emacetHallTicket: student.emacetHallTicket || "",
+    emacetRank:       student.emacetRank       || "",
   });
   const openJee    = () => open("jee", {
     jeeHallTicket: student.jeeHallTicket || "",
@@ -378,8 +378,8 @@ const StudentDashboard = ({ navigation }) => {
         <View style={styles.card}>
           <CardHeader title="📝 EAPCET" onEdit={openEapcet} />
           <View style={styles.grid}>
-            <DetailRow label="Hall Ticket No." value={student.eapcetHallTicket} />
-            <DetailRow label="Rank"            value={student.eapcetRank}       />
+            <DetailRow label="Hall Ticket No." value={student.emacetHallTicket} />
+            <DetailRow label="Rank"            value={student.emacetRank}       />
           </View>
           <DocSection title="Documents Upload" />
           <DocRow docId="eapcet_hall_ticket" title="EAPCET Hall Ticket" />
@@ -559,8 +559,8 @@ const StudentDashboard = ({ navigation }) => {
       {/* EAPCET */}
       <Modal visible={modals.eapcet} onClose={() => closeModal("eapcet")} title="Edit EAPCET Details" size="lg">
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Input label="Hall Ticket No." value={editForm.eapcetHallTicket} onChangeText={(t) => setEditForm({ ...editForm, eapcetHallTicket: t.toUpperCase() })} placeholder="e.g. EAPCET2024XXXXX" autoCapitalize="characters" />
-          <Input label="Rank"            value={editForm.eapcetRank}        onChangeText={(t) => setEditForm({ ...editForm, eapcetRank: t })}                    placeholder="e.g. 12345" keyboardType="numeric" />
+          <Input label="Hall Ticket No." value={editForm.emacetHallTicket} onChangeText={(t) => setEditForm({ ...editForm, emacetHallTicket: t.toUpperCase() })} placeholder="e.g. EAPCET2024XXXXX" autoCapitalize="characters" />
+          <Input label="Rank"            value={editForm.emacetRank}        onChangeText={(t) => setEditForm({ ...editForm, emacetRank: t })}                    placeholder="e.g. 12345" keyboardType="numeric" />
           <SaveBtn modalKey="eapcet" />
         </ScrollView>
       </Modal>

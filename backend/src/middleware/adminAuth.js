@@ -9,7 +9,11 @@ const adminAuth = (req, res, next) => {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = verifyToken(token);
-    if (decoded.role !== 'admin' && decoded.role !== 'Super Admin') {
+    // Admin tokens are minted only by adminController.adminLogin, which
+    // always sets type:'admin' — checking this (instead of matching
+    // specific role strings) means any real admin role from the DB works,
+    // not just a hardcoded 'admin'/'Super Admin' pair.
+    if (decoded.type !== 'admin') {
       return res.status(403).json({ success: false, message: 'Admin access required' });
     }
     req.admin = decoded;
@@ -20,4 +24,3 @@ const adminAuth = (req, res, next) => {
 };
 
 module.exports = adminAuth;
-

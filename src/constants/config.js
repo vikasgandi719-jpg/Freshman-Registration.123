@@ -11,7 +11,7 @@ export const APP = {
 
 // ─── API Configuration ────────────────────────────────────────────────────────
 export const API = {
-  BASE_URL: "http://localhost:5000/v1", // replace with real URL
+  BASE_URL: "http://localhost:5000/api", // replace with real URL
   TIMEOUT: 15000, // 15 seconds
   RETRY_COUNT: 3,
 
@@ -47,6 +47,7 @@ export const API = {
 // ─── Storage Keys ─────────────────────────────────────────────────────────────
 export const STORAGE_KEYS = {
   AUTH_TOKEN: "@bvritn_auth_token",
+  ADMIN_TOKEN: "@bvritn_admin_token",
   REFRESH_TOKEN: "@bvritn_refresh_token",
   USER_DATA: "@bvritn_user_data",
   ADMIN_DATA: "@bvritn_admin_data",
@@ -105,6 +106,7 @@ export const SCREENS = {
   DOCUMENT_UPLOAD: "DocumentUploadScreen",
   PROFILE: "ProfileScreen",
   DOCUMENT_DETAIL: "DocumentDetailScreen",
+  CHANGE_PASSWORD: "ChangePasswordScreen",
 
   // Admin
   ADMIN_DASHBOARD: "AdminDashboard",

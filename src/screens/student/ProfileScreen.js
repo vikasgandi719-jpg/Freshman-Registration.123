@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import Header from "../../components/common/Header";
 import Input from "../../components/common/Input";
@@ -17,6 +18,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useStudent } from "../../context/StudentContext";
 import useAuthHook from "../../hooks/useAuth";
 import studentService from "../../services/studentService";
+import { SCREENS } from "../../constants/config";
 
 const ProfileScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -45,6 +47,15 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const student = profile || user || {};
+
+  const verificationColor = {
+    approved: { bg: "#F0FDF4", text: "#15803D", label: "Verified" },
+    rejected: { bg: "#FFF1F2", text: "#BE123C", label: "Rejected" },
+    pending: { bg: "#FFF7ED", text: "#C2410C", label: "Pending Review" },
+  };
+
+  const status =
+    verificationColor[student.verificationStatus] || verificationColor.pending;
 
   const openEdit = () => {
     setEditForm({
@@ -97,81 +108,94 @@ const ProfileScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderSection = (title, children) => (
+  const renderSection = (icon, title, children) => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionIcon}>{icon}</Text>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
       {children}
     </View>
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Header title="My Profile" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1D4ED8" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
-      <Header title="My Profile" showBack />
+      <Header title="My Profile" />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Student Name */}
-        <View style={styles.nameCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {(student.firstName || student.name || "S")
-                .charAt(0)
-                .toUpperCase()}
-            </Text>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {(student.firstName || student.name || "S")
+                  .charAt(0)
+                  .toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.avatarRing} />
           </View>
           <Text style={styles.studentName}>
             {student.firstName} {student.lastName}
           </Text>
           <Text style={styles.uniqueId}>{student.uniqueId}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+            <View
+              style={[styles.statusDot, { backgroundColor: status.text }]}
+            />
+            <Text style={[styles.statusText, { color: status.text }]}>
+              {status.label}
+            </Text>
+          </View>
         </View>
 
-        {/* Student Details Section */}
-        {renderSection("Student Details", () => (
+        {renderSection(
+          "👤",
+          "Student Details",
           <>
             {renderInfoRow(
               "Full Name",
               `${student.firstName || ""} ${student.lastName || ""}`.trim() ||
                 "Not provided",
             )}
-            {renderInfoRow("Phone Number", student.phone || "Not provided")}
-            {renderInfoRow("Address", student.address || "Not provided")}
-          </>
-        ))}
+            {renderInfoRow("Phone Number", student.phone)}
+            {renderInfoRow("Address", student.address)}
+          </>,
+        )}
 
-        {/* Parent Details Section */}
-        {renderSection("Parent Details", () => (
+        {renderSection(
+          "👨‍👩‍👧",
+          "Parent Details",
           <>
-            {renderInfoRow(
-              "Father's Name",
-              student.fatherName || "Not provided",
-            )}
-            {renderInfoRow(
-              "Father's Phone",
-              student.fatherPhone || "Not provided",
-            )}
-            {renderInfoRow(
-              "Mother's Name",
-              student.motherName || "Not provided",
-            )}
-            {renderInfoRow(
-              "Mother's Phone",
-              student.motherPhone || "Not provided",
-            )}
-          </>
-        ))}
+            {renderInfoRow("Father's Name", student.fatherName)}
+            {renderInfoRow("Father's Phone", student.fatherPhone)}
+            {renderInfoRow("Mother's Name", student.motherName)}
+            {renderInfoRow("Mother's Phone", student.motherPhone)}
+          </>,
+        )}
 
-        {/* EAPCET Details Section */}
-        {renderSection("EAPCET Details", () => (
+        {renderSection(
+          "📝",
+          "EAPCET Details",
           <>
-            {renderInfoRow(
-              "Hall Ticket Number",
-              student.eapcetHallTicket || "Not provided",
-            )}
-            {renderInfoRow("Rank", student.eapcetRank || "Not provided")}
-          </>
-        ))}
+            {renderInfoRow("Hall Ticket Number", student.emacetHallTicket)}
+            {renderInfoRow("Rank", student.emacetRank)}
+          </>,
+        )}
 
-        {/* Higher Studies Section */}
-        {renderSection("Higher Studies Interest", () => (
+        {renderSection(
+          "🎓",
+          "Higher Studies Interest",
           <>
             {renderInfoRow(
               "Interested?",
@@ -188,25 +212,33 @@ const ProfileScreen = ({ navigation }) => {
                   ? `Abroad - ${student.higherStudiesCountryDetail || "Not specified"}`
                   : "India",
               )}
-          </>
-        ))}
+          </>,
+        )}
 
-        {/* Edit Button */}
         <TouchableOpacity style={styles.editBtn} onPress={openEdit}>
+          <Text style={styles.editBtnIcon}>✏️</Text>
           <Text style={styles.editBtnText}>Edit Profile</Text>
         </TouchableOpacity>
 
-        {/* Logout Button */}
+        <TouchableOpacity
+          style={styles.passwordBtn}
+          onPress={() => navigation.navigate(SCREENS.CHANGE_PASSWORD)}
+        >
+          <Text style={styles.passwordBtnIcon}>🔒</Text>
+          <Text style={styles.passwordBtnText}>Change Password</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Text style={styles.logoutBtnIcon}>🚪</Text>
           <Text style={styles.logoutBtnText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Edit Profile Modal */}
       <Modal
         visible={editModal}
         onClose={() => setEditModal(false)}
         title="Edit Profile"
+        size="lg"
       >
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.modalSectionTitle}>Student Details</Text>
@@ -268,16 +300,16 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.modalSectionTitle}>EAPCET Details</Text>
           <Input
             label="EAPCET Hall Ticket Number"
-            value={editForm.eapcetHallTicket}
+            value={editForm.emacetHallTicket}
             onChangeText={(t) =>
-              setEditForm({ ...editForm, eapcetHallTicket: t })
+              setEditForm({ ...editForm, emacetHallTicket: t })
             }
             placeholder="Enter hall ticket number"
           />
           <Input
             label="EAPCET Rank"
-            value={editForm.eapcetRank}
-            onChangeText={(t) => setEditForm({ ...editForm, eapcetRank: t })}
+            value={editForm.emacetRank}
+            onChangeText={(t) => setEditForm({ ...editForm, emacetRank: t })}
             placeholder="Enter rank"
             keyboardType="numeric"
           />
@@ -393,6 +425,8 @@ const ProfileScreen = ({ navigation }) => {
             title={saving ? "Saving..." : "Save Changes"}
             onPress={handleSave}
             disabled={saving}
+            loading={saving}
+            fullWidth
             style={styles.saveBtn}
           />
         </ScrollView>
@@ -403,63 +437,160 @@ const ProfileScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#F8FAFC" },
-  container: { flex: 1, paddingHorizontal: 16 },
-  nameCard: { alignItems: "center", paddingVertical: 24 },
+  container: { flex: 1 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileHeader: {
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    backgroundColor: "#EFF6FF",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 8,
+  },
+  avatarContainer: {
+    position: "relative",
+    marginBottom: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: "#1D4ED8",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    shadowColor: "#1D4ED8",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  avatarText: { fontSize: 32, fontWeight: "700", color: "#FFFFFF" },
-  studentName: { fontSize: 22, fontWeight: "700", color: "#0F172A" },
-  uniqueId: { fontSize: 14, color: "#64748B", marginTop: 4 },
+  avatarRing: {
+    position: "absolute",
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    borderWidth: 2.5,
+    borderColor: "#1D4ED8",
+    opacity: 0.2,
+  },
+  avatarText: { fontSize: 36, fontWeight: "700", color: "#FFFFFF" },
+  studentName: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  uniqueId: { fontSize: 14, color: "#64748B", marginTop: 4, marginBottom: 10 },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
   section: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
+  sectionIcon: { fontSize: 18 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#0F172A",
-    marginBottom: 12,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
-  infoLabel: { fontSize: 14, color: "#64748B" },
+  infoLabel: { fontSize: 14, color: "#64748B", flex: 1 },
   infoValue: {
     fontSize: 14,
     fontWeight: "600",
     color: "#0F172A",
-    maxWidth: "50%",
+    maxWidth: "55%",
     textAlign: "right",
   },
   editBtn: {
     backgroundColor: "#1D4ED8",
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginHorizontal: 16,
     marginTop: 8,
-    marginBottom: 12,
+    marginBottom: 10,
+    shadowColor: "#1D4ED8",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  editBtnText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-  logoutBtn: {
-    backgroundColor: "#FEE2E2",
-    borderRadius: 12,
-    paddingVertical: 14,
+  editBtnIcon: { fontSize: 16 },
+  editBtnText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+  passwordBtn: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: "center",
-    marginBottom: 24,
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1.5,
+    borderColor: "#DBEAFE",
   },
+  passwordBtnIcon: { fontSize: 16 },
+  passwordBtnText: { color: "#1D4ED8", fontSize: 16, fontWeight: "700" },
+  logoutBtn: {
+    backgroundColor: "#FEF2F2",
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  logoutBtnIcon: { fontSize: 16 },
   logoutBtnText: { color: "#DC2626", fontSize: 16, fontWeight: "600" },
   modalSectionTitle: {
     fontSize: 15,

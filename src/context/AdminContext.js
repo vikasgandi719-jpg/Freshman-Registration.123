@@ -100,7 +100,7 @@ export const AdminProvider = ({ children }) => {
   // ── FIX: Just silently clear stale storage. No isLoading toggling at all.
   // isLoading starts false so AppNavigator is never blocked by admin state.
   useEffect(() => {
-    AsyncStorage.removeItem(STORAGE_KEYS.ADMIN_DATA).catch(() => {});
+    AsyncStorage.multiRemove([STORAGE_KEYS.ADMIN_DATA, STORAGE_KEYS.ADMIN_TOKEN]).catch(() => {});
   }, []);
 
   const loginAdmin = async (admin, token) => {
@@ -113,7 +113,7 @@ export const AdminProvider = ({ children }) => {
   };
 
   const logoutAdmin = async () => {
-    await AsyncStorage.removeItem(STORAGE_KEYS.ADMIN_DATA).catch(() => {});
+    await AsyncStorage.multiRemove([STORAGE_KEYS.ADMIN_DATA, STORAGE_KEYS.ADMIN_TOKEN]).catch(() => {});
     dispatch({ type: ADMIN_ACTIONS.LOGOUT });
   };
 
